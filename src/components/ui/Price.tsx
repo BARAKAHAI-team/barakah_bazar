@@ -42,8 +42,8 @@ export const Price: React.FC<PriceProps> = ({
             {formatINR(compareAtPricePaise)}
           </span>
           {percentOff > 0 && (
-            <span className="text-xs font-medium text-[var(--danger)]">
-              ({percentOff}% off)
+            <span className="text-xs font-medium text-[#1B7A3E]">
+              {percentOff}% off
             </span>
           )}
         </>

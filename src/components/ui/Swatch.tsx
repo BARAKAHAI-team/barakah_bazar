@@ -35,32 +35,29 @@ export const Swatch: React.FC<SwatchProps> = ({
   const bg = colorHex || colorMap[name] || '#888888';
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      aria-label={`Color ${name}${selected ? ', selected' : ''}`}
-      aria-pressed={selected}
-      className={clsx(
-        'group flex items-center gap-2 p-1 text-xs cursor-pointer border-0 bg-transparent disabled:opacity-40 disabled:cursor-not-allowed',
-        className
-      )}
-    >
-      <span
-        style={{ backgroundColor: bg, borderRadius: '9999px' }}
+    <div className="relative group inline-block">
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={disabled}
+        title={name}
+        aria-label={`Colour ${name}${selected ? ', selected' : ''}`}
+        aria-pressed={selected}
         className={clsx(
-          'w-6 h-6 border border-[var(--line)] transition-all block',
-          selected && 'outline outline-2 outline-[var(--ink)] outline-offset-2'
+          'w-7 h-7 rounded-[2px] border transition-all cursor-pointer block relative p-0',
+          selected
+            ? 'border-[var(--ink)] ring-1 ring-[var(--ink)] ring-offset-1'
+            : 'border-[var(--line)] hover:border-[var(--ink)]',
+          disabled && 'opacity-30 cursor-not-allowed',
+          className
         )}
+        style={{ backgroundColor: bg }}
       />
-      <span
-        className={clsx(
-          'text-xs select-none',
-          selected ? 'font-medium text-[var(--ink)]' : 'text-[var(--ink-muted)]'
-        )}
-      >
+      {/* Colour name tooltip on hover */}
+      <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:block px-1.5 py-0.5 text-[10px] bg-[var(--ink)] text-white rounded-[2px] whitespace-nowrap z-20">
         {name}
       </span>
-    </button>
+    </div>
   );
 };
+

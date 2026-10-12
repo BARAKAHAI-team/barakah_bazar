@@ -1,5 +1,6 @@
 import { ConsoleEmailSender } from './email';
 import { ConsoleWhatsAppSender } from './whatsapp';
+import { formatINR } from '@/lib/pricing/money';
 
 export async function processNotification(item: {
   channel: 'WHATSAPP' | 'EMAIL';
@@ -13,7 +14,7 @@ export async function processNotification(item: {
   if (item.channel === 'WHATSAPP') {
     await waSender.send(
       item.recipient,
-      `Your Barakah Bazaar order ${item.orderNumber} has been confirmed. Total payable: ₹${Math.round(item.totalPaise / 100)}. Thank you for shopping with us.`
+      `Your Barakah Bazaar order ${item.orderNumber} has been confirmed. Total payable: ${formatINR(item.totalPaise)}. Thank you for shopping with us.`
     );
   } else if (item.channel === 'EMAIL') {
     await emailSender.send(

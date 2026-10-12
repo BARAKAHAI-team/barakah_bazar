@@ -46,6 +46,7 @@ export interface CatalogProduct {
   is_active: boolean;
   variants: CatalogVariant[];
   images: CatalogImage[];
+  created_at?: string;
   rating: {
     avg_rating: number;
     review_count: number;

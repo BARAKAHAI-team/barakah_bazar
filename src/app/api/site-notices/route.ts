@@ -5,7 +5,7 @@ export async function GET() {
   try {
     if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
       const supabase = createPublicClient();
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('site_notices')
         .select('id, text')
         .eq('is_active', true)

@@ -116,7 +116,7 @@ export const Header: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-[var(--surface)]">
+    <header className="sticky top-0 z-40 bg-[var(--surface)] border-t-2 border-[var(--accent-bridal)]">
       {/* Top Announcement Bar: Renders ONLY if active notice exists in DB. Default: no bar at all */}
       {activeNotice && (
         <div className="bg-[var(--surface-subtle)] text-[var(--ink)] text-xs py-2 px-4 border-b border-[var(--line)] text-center">
@@ -151,10 +151,10 @@ export const Header: React.FC = () => {
             <div className="relative flex-1">
               <input
                 type="text"
-                placeholder="Search products"
+                placeholder="Search for bridal lehengas, spices, oils..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-10 pl-9 pr-3 bg-[var(--surface)] border border-[var(--line)] rounded-[2px] text-xs text-[var(--ink)] placeholder:text-[var(--ink-muted)] outline-hidden focus:border-[var(--ink)]"
+                className="w-full h-10 pl-9 pr-3 bg-white border border-gray-300 rounded-[2px] text-xs text-gray-900 placeholder:text-gray-400 outline-hidden focus:border-[var(--accent-bridal)]"
               />
               <Search
                 size={15}
@@ -164,7 +164,7 @@ export const Header: React.FC = () => {
             </div>
             <button
               type="submit"
-              className="ml-2 px-4 h-10 bg-[var(--ink)] hover:bg-black text-[var(--bg)] text-xs font-medium rounded-[2px] cursor-pointer transition-colors"
+              className="ml-2 px-4 h-10 bg-[var(--ink)] hover:bg-[var(--accent-bridal)] text-white text-xs font-medium rounded-[2px] cursor-pointer transition-colors"
             >
               Search
             </button>
@@ -183,37 +183,33 @@ export const Header: React.FC = () => {
             <Link
               href="/wishlist"
               aria-label={`Wishlist (${wishlistCount} items)`}
-              className="relative p-2 text-[var(--ink)] hover:text-black rounded-[2px] transition-colors"
+              className="flex items-center gap-1.5 px-2 py-1.5 text-[var(--ink)] hover:text-[var(--accent-bridal)] rounded-[2px] transition-colors no-underline"
             >
-              <Heart size={20} strokeWidth={1.5} />
-              {wishlistCount > 0 && (
-                <span className="absolute top-0 right-0 min-w-[16px] h-[16px] px-1 flex items-center justify-center text-[10px] font-medium text-white bg-[var(--ink)] rounded-[2px] tabular-nums">
-                  {wishlistCount}
-                </span>
-              )}
+              <Heart size={18} strokeWidth={1.5} />
+              <span className="text-[12px] font-medium hidden sm:inline">
+                Wishlist {wishlistCount > 0 ? `(${wishlistCount})` : ''}
+              </span>
             </Link>
 
             <Link
               href="/cart"
               aria-label={`Cart (${cartCount} items)`}
-              className="relative p-2 text-[var(--ink)] hover:text-black rounded-[2px] transition-colors"
+              className="flex items-center gap-1.5 px-2 py-1.5 text-[var(--ink)] hover:text-[var(--accent-bridal)] rounded-[2px] transition-colors no-underline"
             >
-              <ShoppingBag size={20} strokeWidth={1.5} />
-              {cartCount > 0 && (
-                <span className="absolute top-0 right-0 min-w-[16px] h-[16px] px-1 flex items-center justify-center text-[10px] font-medium text-white bg-[var(--ink)] rounded-[2px] tabular-nums">
-                  {cartCount}
-                </span>
-              )}
+              <ShoppingBag size={18} strokeWidth={1.5} />
+              <span className="text-[12px] font-medium">
+                Cart {cartCount > 0 ? `(${cartCount})` : ''}
+              </span>
             </Link>
 
             <Link
               href={isLoggedIn ? '/account' : '/login'}
               aria-label={isLoggedIn ? 'Account' : 'Sign in'}
-              className="flex items-center gap-1.5 p-2 text-xs font-medium text-[var(--ink)] hover:text-black rounded-[2px] transition-colors no-underline"
+              className="flex items-center gap-1.5 px-2 py-1.5 text-[var(--ink)] hover:text-[var(--accent-bridal)] rounded-[2px] transition-colors no-underline"
             >
               <User size={18} strokeWidth={1.5} />
-              <span className="hidden sm:inline">
-                {isLoggedIn ? 'Account' : 'Sign in'}
+              <span className="text-[12px] font-medium hidden sm:inline">
+                {isLoggedIn ? (clientStore.userName ? clientStore.userName.split(' ')[0] : 'Account') : 'Sign in'}
               </span>
             </Link>
           </div>

@@ -201,23 +201,23 @@ function LoginForm() {
           {step === 'phone' ? (
             <div className="space-y-6">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-[#6B1D2F] block mb-1">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--accent-bridal)] block mb-1">
                   Seamless Sign In
                 </span>
-                <h1 className="font-serif text-2xl sm:text-3xl font-bold text-stone-900 m-0">
+                <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[var(--ink)] m-0">
                   Log in or Register
                 </h1>
-                <p className="text-xs text-stone-500 mt-2">
+                <p className="text-xs text-[var(--ink-muted)] mt-2">
                   Enter your 10-digit Indian mobile number to receive a secure 6-digit OTP via SMS.
                 </p>
               </div>
 
               <form onSubmit={handleRequestOtp} className="space-y-5">
                 <div className="space-y-1.5">
-                  <label htmlFor="phone-input" className="block text-xs font-bold uppercase tracking-wider text-stone-700">
+                  <label htmlFor="phone-input" className="block text-xs font-bold uppercase tracking-wider text-[var(--ink)]">
                     Mobile Number
                   </label>
-                  <div className="flex rounded-[2px] border border-[var(--line)] focus-within:border-[var(--ink)] overflow-hidden transition-all bg-[var(--surface)]">
+                  <div className="flex rounded-[2px] border border-[var(--line)] focus-within:border-[var(--accent-bridal)] overflow-hidden transition-all bg-[var(--surface)]">
                     <div className="flex items-center gap-1.5 px-3.5 bg-[var(--surface-subtle)] border-r border-[var(--line)] text-xs font-semibold text-[var(--ink)] select-none">
                       <span className="text-base leading-none">🇮🇳</span>
                       <span>+91</span>
@@ -246,7 +246,7 @@ function LoginForm() {
                   variant="primary"
                   size="lg"
                   loading={loading}
-                  className="w-full py-3 bg-[var(--ink)] hover:bg-black text-[var(--bg)] font-medium text-xs uppercase tracking-wider rounded-[2px] cursor-pointer"
+                  className="w-full py-3 bg-[var(--ink)] hover:bg-[var(--accent-bridal)] text-white font-medium text-xs uppercase tracking-wider rounded-[2px] cursor-pointer transition-colors"
                 >
                   Request OTP &rarr;
                 </Button>
@@ -338,7 +338,7 @@ function LoginForm() {
                   size="lg"
                   loading={loading}
                   disabled={fullOtp.length !== 6}
-                  className="w-full py-3 bg-[var(--ink)] hover:bg-black disabled:opacity-50 text-[var(--bg)] font-medium text-xs uppercase tracking-wider rounded-[2px] cursor-pointer"
+                  className="w-full py-3 bg-[var(--ink)] hover:bg-[var(--accent-bridal)] disabled:opacity-50 text-white font-medium text-xs uppercase tracking-wider rounded-[2px] cursor-pointer transition-colors"
                 >
                   Verify &amp; Proceed &rarr;
                 </Button>

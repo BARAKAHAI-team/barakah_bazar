@@ -3,10 +3,11 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import clsx from 'clsx';
 import { getCategoryBySlug, listCategoryProducts } from '@/lib/catalog/data';
+import { SEED_PRODUCTS } from '@/lib/catalog/seed-data';
 import { ProductCard } from '@/components/shop/ProductCard';
-import { FilterDrawer } from '@/components/shop/FilterDrawer';
+import { SubcategoryStrip, SubcategoryItem } from '@/components/shop/SubcategoryStrip';
+import { QuickFilterBar } from '@/components/shop/QuickFilterBar';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
-import { SITE_CLAIMS } from '@/lib/site-claims';
 
 export const revalidate = 300;
 
@@ -20,27 +21,70 @@ interface PageProps {
     packSize?: string;
     occasion?: string;
     subCategory?: string;
+    discount?: string;
+    rating?: string;
     sort?: 'newest' | 'price_asc' | 'price_desc';
     page?: string;
   }>;
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { category: slug } = await params;
+  const sp = await searchParams;
   const cat = await getCategoryBySlug(slug);
   if (!cat) return {};
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const canonicalUrl = `${siteUrl}/${cat.slug}`;
 
   return {
     title: cat.seo_title || cat.name,
     description: cat.seo_description || cat.description || undefined,
     alternates: {
-      canonical: `/${cat.slug}`,
+      canonical: canonicalUrl,
     },
     openGraph: {
       title: cat.seo_title || cat.name,
       description: cat.seo_description || cat.description || undefined,
     },
   };
+}
+
+function getSubcategoryItems(slug: string): SubcategoryItem[] {
+  if (slug === 'bridal') {
+    return [
+      { name: 'All Bridal', value: '' },
+      { name: 'Lehengas & Sarees', value: 'Lehengas & Sarees' },
+      { name: 'Bridal Abayas & Kaftans', value: 'Bridal Abayas & Kaftans' },
+      { name: 'Ghararas & Shararas', value: 'Ghararas & Shararas' },
+      { name: 'Choker & Necklace Sets', value: 'Choker & Necklace Sets' },
+      { name: 'Rings & Angoothi', value: 'Rings & Angoothi' },
+      { name: 'Bracelets & Haathphool', value: 'Bracelets & Haathphool' },
+      { name: 'Temple Jewellery', value: 'Temple Jewellery' },
+    ];
+  }
+
+  if (slug === 'naturals') {
+    return [
+      { name: 'All Naturals', value: '' },
+      { name: 'Farm Spices', value: 'Farm Spices' },
+      { name: 'Turmeric & Pepper', value: 'Turmeric & Pepper' },
+      { name: 'Aromatic Cardamom', value: 'Aromatic Cardamom' },
+      { name: 'Kashmir Saffron', value: 'Kashmir Saffron' },
+    ];
+  }
+
+  if (slug === 'coconut-oil') {
+    return [
+      { name: 'All Oils', value: '' },
+      { name: 'Cold-Pressed', value: 'Cold-Pressed' },
+      { name: 'Roasted Uruli', value: 'Roasted Uruli' },
+      { name: 'Wood-Pressed', value: 'Wood-Pressed' },
+      { name: 'Ayurvedic Hair Oil', value: 'Ayurvedic Hair Oil' },
+    ];
+  }
+
+  return [];
 }
 
 export default async function CategoryPage({ params, searchParams }: PageProps) {
@@ -72,7 +116,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     limit: 24,
   });
 
-  const isBridal = slug === 'bridal';
+  const subcategoryItems = getSubcategoryItems(slug);
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   const breadcrumbsJsonLd = {
@@ -94,6 +138,22 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     ],
   };
 
+  // Build pagination URLs
+  const buildPageUrl = (targetPage: number) => {
+    const q = new URLSearchParams();
+    if (sp.minPrice) q.set('minPrice', sp.minPrice);
+    if (sp.maxPrice) q.set('maxPrice', sp.maxPrice);
+    if (sp.size) q.set('size', sp.size);
+    if (sp.colour) q.set('colour', sp.colour);
+    if (sp.packSize) q.set('packSize', sp.packSize);
+    if (sp.subCategory) q.set('subCategory', sp.subCategory);
+    if (sp.sort) q.set('sort', sp.sort);
+    if (sp.discount) q.set('discount', sp.discount);
+    if (sp.rating) q.set('rating', sp.rating);
+    q.set('page', targetPage.toString());
+    return `/${slug}?${q.toString()}`;
+  };
+
   return (
     <>
       <script
@@ -101,39 +161,44 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbsJsonLd) }}
       />
 
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-4 sm:py-6">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-4 sm:py-6">
         <Breadcrumbs items={[{ label: category.name }]} />
 
-        {/* Plain Page Header: H1, one-line description, 1px hairline below. No card, no container background */}
-        <header className="mt-4 pb-5 border-b border-[var(--line)]">
+        {/* Page Header: H1, one-line description, 1px hairline below */}
+        <header className="mt-3 pb-4">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--accent-bridal)] block mb-1">
+            Collection
+          </span>
           <h1 className="font-serif text-3xl sm:text-4xl text-[var(--ink)] font-bold m-0 leading-tight">
             {category.name}
           </h1>
           {category.description && (
-            <p className="text-sm text-[var(--ink-muted)] max-w-2xl mt-2 mb-0 leading-relaxed">
+            <p className="text-sm text-[var(--ink-muted)] max-w-2xl mt-1.5 mb-0 leading-relaxed">
               {category.description}
             </p>
           )}
-
-          {/* Render site claims only if client provides them in config */}
-          {SITE_CLAIMS.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-3 text-xs text-[var(--ink-muted)]">
-              {SITE_CLAIMS.map((claim) => (
-                <span
-                  key={claim.id}
-                  className="px-2 py-0.5 border border-[var(--line)] rounded-[2px]"
-                >
-                  {claim.label}
-                </span>
-              ))}
-            </div>
-          )}
         </header>
 
-        {/* Filter and Sort Bar */}
-        <FilterDrawer categorySlug={slug} totalProducts={total} />
+        {/* Indian e-commerce "Shop by Type" Sub-category Image Strip */}
+        {subcategoryItems.length > 0 && (
+          <SubcategoryStrip
+            categorySlug={slug}
+            items={subcategoryItems}
+            activeValue={sp.subCategory || ''}
+            accentColor={category.accent}
+          />
+        )}
+      </div>
 
-        {/* Product Grid */}
+      {/* Sticky Quick Filter & Sort Bar */}
+      <QuickFilterBar
+        categorySlug={slug}
+        totalProducts={total}
+        hasReviews={true}
+      />
+
+      {/* Main Listing Grid Container */}
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-6">
         {products.length === 0 ? (
           <div className="py-16 text-center border border-[var(--line)] bg-[var(--surface)] p-8 rounded-[2px]">
             <p className="text-sm text-[var(--ink-muted)] mb-4">
@@ -147,42 +212,48 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
             </Link>
           </div>
         ) : (
-          <div
-            className={clsx(
-              'grid gap-4 sm:gap-6',
-              isBridal
-                ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-3'
-                : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'
-            )}
-          >
+          /* Dense Indian e-commerce Grid: 4 cols at 1280px, 3 at 1024px, 2 on tablet/mobile */
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
             {products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
         )}
 
-        {/* Pagination */}
+        {/* Load More Button & Pagination (SEO-crawlable) */}
         {totalPages > 1 && (
-          <nav aria-label="Pagination" className="mt-12 flex items-center justify-center gap-2">
-            {Array.from({ length: totalPages }).map((_, i) => {
-              const pageNumber = i + 1;
-              const isCurrent = pageNumber === currentPage;
-              return (
-                <Link
-                  key={pageNumber}
-                  href={`/${slug}?page=${pageNumber}`}
-                  className={clsx(
-                    'w-9 h-9 flex items-center justify-center text-xs font-medium border rounded-[2px] transition-colors',
-                    isCurrent
-                      ? 'border-[var(--ink)] bg-[var(--ink)] text-[var(--bg)]'
-                      : 'border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] hover:border-[var(--ink)]'
-                  )}
-                >
-                  {pageNumber}
-                </Link>
-              );
-            })}
-          </nav>
+          <div className="mt-12 flex flex-col items-center gap-4">
+            {currentPage < totalPages && (
+              <Link
+                href={buildPageUrl(currentPage + 1)}
+                className="px-8 py-3 bg-[var(--ink)] hover:bg-[var(--accent-bridal)] text-white text-xs font-semibold uppercase tracking-wider rounded-[2px] transition-colors no-underline"
+              >
+                Load more products
+              </Link>
+            )}
+
+            {/* Standard Accessible Page Links */}
+            <nav aria-label="Pagination" className="flex items-center gap-1.5 pt-2">
+              {Array.from({ length: totalPages }).map((_, i) => {
+                const pageNumber = i + 1;
+                const isCurrent = pageNumber === currentPage;
+                return (
+                  <Link
+                    key={pageNumber}
+                    href={buildPageUrl(pageNumber)}
+                    className={clsx(
+                      'w-8 h-8 flex items-center justify-center text-xs font-medium border rounded-[2px] transition-colors no-underline',
+                      isCurrent
+                        ? 'border-[var(--ink)] bg-[var(--ink)] text-white font-semibold'
+                        : 'border-[var(--line)] bg-white text-[var(--ink)] hover:border-gray-500'
+                    )}
+                  >
+                    {pageNumber}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
         )}
       </div>
     </>

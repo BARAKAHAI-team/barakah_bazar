@@ -124,7 +124,12 @@ export const FilterDrawer: React.FC<FilterDrawerProps> = ({ categorySlug, totalP
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   {[
+                    'Lehengas & Sarees',
+                    'Bridal Abayas & Kaftans',
+                    'Ghararas & Shararas',
                     'Choker & Necklace Sets',
+                    'Rings & Angoothi',
+                    'Bracelets & Haathphool',
                     'Temple Jewellery',
                     'Bangles & Kadas',
                     'Hair Ornaments',
@@ -147,7 +152,7 @@ export const FilterDrawer: React.FC<FilterDrawerProps> = ({ categorySlug, totalP
                   Occasion
                 </h4>
                 <div className="flex flex-wrap gap-2">
-                  {['Bride', 'Wedding', 'Reception', 'Haldi', 'Mehendi'].map((occ) => (
+                  {['Nikah', 'Walima', 'Bride', 'Wedding', 'Reception', 'Haldi', 'Mehendi'].map((occ) => (
                     <button
                       key={occ}
                       type="button"

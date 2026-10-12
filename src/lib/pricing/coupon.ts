@@ -1,3 +1,5 @@
+import { formatINR } from './money';
+
 export interface CouponValidationResult {
   valid: boolean;
   code: string;
@@ -67,13 +69,12 @@ export function calculateCouponDiscount(
   }
 
   if (subtotalPaise < coupon.min_order_paise) {
-    const minRupees = Math.round(coupon.min_order_paise / 100);
     return {
       valid: false,
       code: coupon.code,
       discountPaise: 0,
       newTotalPaise: subtotalPaise,
-      error: `Minimum order of ₹${minRupees} required for this coupon.`,
+      error: `Minimum order of ${formatINR(coupon.min_order_paise)} required for this coupon.`,
     };
   }
 

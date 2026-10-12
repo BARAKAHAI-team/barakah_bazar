@@ -1,22 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #F8F5EF;             /* warm off-white page background */
-  --surface: #FFFFFF;        /* clean white card surface */
-  --surface-2: #F1EDE4;      /* neutral placeholder tile */
-  --surface-subtle: #F1EDE4; /* subtle neutral background */
-  --ink: #1F1B16;            /* body text, primary buttons */
-  --ink-muted: #5E574E;      /* secondary text */
-  --line: #DDD6CA;           /* hairlines */
-  --line-subtle: #E8E2D8;    /* ultra soft border */
-  --accent-bridal: #6B1F2A;  /* bridal wine */
-  --accent-naturals: #4A6338;/* naturals olive green */
-  --accent-coconut: #7A5B2E; /* coconut oil warm amber */
-  --gold: #C5A059;           /* accent gold if needed */
-  --gold-light: #FAF2DF;
-  --danger: #A4262C;
-  --success: #2F6B3F;
-  --focus: #1F1B16;
+  --bg: #FFFFFF;             /* crisp clean white page background like Myntra, Nykaa, Tata CLiQ */
+  --surface: #FFFFFF;        /* clean card and header surface */
+  --surface-2: #F9FAFB;      /* light neutral placeholder / swatch */
+  --surface-subtle: #F9FAFB; /* soft neutral background for price blocks & inputs */
+  --ink: #111827;            /* crisp dark ink for high readability */
+  --ink-muted: #6B7280;      /* clean secondary text */
+  --line: #E5E7EB;           /* standard crisp 1px borders */
+  --line-subtle: #F3F4F6;    /* light dividing lines */
+  --accent-bridal: #800020;  /* Indian bridal royal burgundy / deep maroon */
+  --accent-naturals: #15803D;/* deep Malabar harvest green */
+  --accent-coconut: #854D0E; /* warm Kerala coconut copra amber */
+  --gold: #B45309;           /* warm Indian zari gold / rating star */
+  --gold-light: #FEF3C7;     /* light gold tint */
+  --danger: #DC2626;         /* Indian sale & discount red */
+  --success: #16A34A;        /* in-stock green */
+  --focus: #800020;
 }
 
 @theme {
@@ -38,7 +38,7 @@
   --color-focus: var(--focus);
 
   --font-serif: var(--font-newsreader), Georgia, serif;
-  --font-sans: var(--font-public-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: var(--font-public-sans), "Noto Sans Devanagari", "Noto Sans Malayalam", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
   --radius-xs: 2px;
   --radius-sm: 2px;
@@ -51,10 +51,21 @@
 body {
   background-color: var(--bg);
   color: var(--ink);
-  font-family: var(--font-public-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-public-sans), "Noto Sans Devanagari", "Noto Sans Malayalam", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
   margin: 0;
   padding: 0;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Hide scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* Custom scrollbar for modern e-commerce */
