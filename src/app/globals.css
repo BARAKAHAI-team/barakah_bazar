@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #F8F5EF;             /* warm off-white page background */
+  --surface: #FFFFFF;        /* clean white card surface */
+  --surface-2: #F1EDE4;      /* neutral placeholder tile */
+  --surface-subtle: #F1EDE4; /* subtle neutral background */
+  --ink: #1F1B16;            /* body text, primary buttons */
+  --ink-muted: #5E574E;      /* secondary text */
+  --line: #DDD6CA;           /* hairlines */
+  --line-subtle: #E8E2D8;    /* ultra soft border */
+  --accent-bridal: #6B1F2A;  /* bridal wine */
+  --accent-naturals: #4A6338;/* naturals olive green */
+  --accent-coconut: #7A5B2E; /* coconut oil warm amber */
+  --gold: #C5A059;           /* accent gold if needed */
+  --gold-light: #FAF2DF;
+  --danger: #A4262C;
+  --success: #2F6B3F;
+  --focus: #1F1B16;
+}
+
+@theme {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-line: var(--line);
+  --color-line-subtle: var(--line-subtle);
+  --color-accent-bridal: var(--accent-bridal);
+  --color-accent-naturals: var(--accent-naturals);
+  --color-coconut: var(--accent-coconut);
+  --color-gold: var(--gold);
+  --color-gold-light: var(--gold-light);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-focus: var(--focus);
+
+  --font-serif: var(--font-newsreader), Georgia, serif;
+  --font-sans: var(--font-public-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  --radius-xs: 2px;
+  --radius-sm: 2px;
+  --radius-md: 2px;
+  --radius-lg: 2px;
+  --radius-xl: 2px;
+  --radius-2xl: 2px;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-public-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom scrollbar for modern e-commerce */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F3ECE1;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBBCA4;
+  border-radius: 3px;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

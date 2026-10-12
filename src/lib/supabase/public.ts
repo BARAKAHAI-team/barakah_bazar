@@ -1,0 +1,15 @@
+import { createClient } from '@supabase/supabase-js';
+import type { Database } from './database.types';
+
+// Cookie-less public client used for cacheable catalog reads (ISR / static rendering)
+export function createPublicClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
+}
