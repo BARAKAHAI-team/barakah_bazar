@@ -3,11 +3,14 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import clsx from 'clsx';
 import { getCategoryBySlug, listCategoryProducts } from '@/lib/catalog/data';
-import { SEED_PRODUCTS } from '@/lib/catalog/seed-data';
 import { ProductCard } from '@/components/shop/ProductCard';
 import { SubcategoryStrip, SubcategoryItem } from '@/components/shop/SubcategoryStrip';
 import { QuickFilterBar } from '@/components/shop/QuickFilterBar';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
+import { CategoryHero } from '@/components/shop/CategoryHero';
+import { CategoryTrustBar } from '@/components/shop/CategoryTrustBar';
+import { CategoryEditorialStory } from '@/components/shop/CategoryEditorialStory';
+import { FloatingWhatsApp } from '@/components/shop/FloatingWhatsApp';
 
 export const revalidate = 300;
 
@@ -30,7 +33,6 @@ interface PageProps {
 
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { category: slug } = await params;
-  const sp = await searchParams;
   const cat = await getCategoryBySlug(slug);
   if (!cat) return {};
 
@@ -54,33 +56,25 @@ function getSubcategoryItems(slug: string): SubcategoryItem[] {
   if (slug === 'bridal') {
     return [
       { name: 'All Bridal', value: '' },
-      { name: 'Lehengas & Sarees', value: 'Lehengas & Sarees' },
-      { name: 'Bridal Abayas & Kaftans', value: 'Bridal Abayas & Kaftans' },
-      { name: 'Ghararas & Shararas', value: 'Ghararas & Shararas' },
-      { name: 'Choker & Necklace Sets', value: 'Choker & Necklace Sets' },
-      { name: 'Rings & Angoothi', value: 'Rings & Angoothi' },
-      { name: 'Bracelets & Haathphool', value: 'Bracelets & Haathphool' },
-      { name: 'Temple Jewellery', value: 'Temple Jewellery' },
+      { name: 'Festive Suits & Sets', value: 'Festive Suits & Sets' },
+      { name: 'Bridal Lehengas', value: 'Bridal Lehengas' },
     ];
   }
 
   if (slug === 'naturals') {
     return [
       { name: 'All Naturals', value: '' },
-      { name: 'Farm Spices', value: 'Farm Spices' },
-      { name: 'Turmeric & Pepper', value: 'Turmeric & Pepper' },
-      { name: 'Aromatic Cardamom', value: 'Aromatic Cardamom' },
-      { name: 'Kashmir Saffron', value: 'Kashmir Saffron' },
+      { name: 'Artisanal Scented Candles', value: 'Artisanal Scented Candles' },
+      { name: 'Single-Origin Spices', value: 'Single-Origin Spices' },
     ];
   }
 
   if (slug === 'coconut-oil') {
     return [
       { name: 'All Oils', value: '' },
-      { name: 'Cold-Pressed', value: 'Cold-Pressed' },
-      { name: 'Roasted Uruli', value: 'Roasted Uruli' },
-      { name: 'Wood-Pressed', value: 'Wood-Pressed' },
-      { name: 'Ayurvedic Hair Oil', value: 'Ayurvedic Hair Oil' },
+      { name: 'Cold-Pressed Coconut Oil', value: 'Cold-Pressed Coconut Oil' },
+      { name: 'Roasted Uruli Coconut Oil', value: 'Roasted Uruli Coconut Oil' },
+      { name: 'Ayurvedic Hair Care', value: 'Ayurvedic Hair Care' },
     ];
   }
 
@@ -161,78 +155,82 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbsJsonLd) }}
       />
 
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-4 sm:py-6">
-        <Breadcrumbs items={[{ label: category.name }]} />
+      {/* Top Breadcrumbs: Seamless integration with clean site header */}
+      <div className="bg-white border-b border-stone-100">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-2.5">
+          <Breadcrumbs items={[{ label: category.name }]} />
+        </div>
+      </div>
 
-        {/* Page Header: H1, one-line description, 1px hairline below */}
-        <header className="mt-3 pb-4">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--accent-bridal)] block mb-1">
-            Collection
-          </span>
-          <h1 className="font-serif text-3xl sm:text-4xl text-[var(--ink)] font-bold m-0 leading-tight">
-            {category.name}
-          </h1>
-          {category.description && (
-            <p className="text-sm text-[var(--ink-muted)] max-w-2xl mt-1.5 mb-0 leading-relaxed">
-              {category.description}
-            </p>
-          )}
-        </header>
+      {/* 1. High-Impact Editorial Hero Showcase */}
+      <CategoryHero
+        slug={slug}
+        name={category.name}
+        tagline={category.tagline}
+        description={category.description}
+        imageUrl={category.imageUrl}
+        totalProducts={total}
+      />
 
-        {/* Indian e-commerce "Shop by Type" Sub-category Image Strip */}
-        {subcategoryItems.length > 0 && (
+      {/* 2. Four-Pillar Trust & Guarantees Strip */}
+      <CategoryTrustBar slug={slug} />
+
+      {/* 3. Sub-category Navigation Strip */}
+      {subcategoryItems.length > 0 && (
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 pt-3">
           <SubcategoryStrip
             categorySlug={slug}
             items={subcategoryItems}
             activeValue={sp.subCategory || ''}
             accentColor={category.accent}
           />
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Sticky Quick Filter & Sort Bar */}
+      {/* 4. Sticky Quick Filter & Sort Bar */}
       <QuickFilterBar
         categorySlug={slug}
         totalProducts={total}
         hasReviews={true}
       />
 
-      {/* Main Listing Grid Container */}
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-6">
+      {/* 5. Main Product Listing Grid */}
+      <div id="products-grid" className="max-w-[1280px] mx-auto px-4 sm:px-6 py-6 scroll-mt-20">
         {products.length === 0 ? (
-          <div className="py-16 text-center border border-[var(--line)] bg-[var(--surface)] p-8 rounded-[2px]">
-            <p className="text-sm text-[var(--ink-muted)] mb-4">
-              No products found matching the selected filters.
+          <div className="py-16 text-center border border-stone-200 bg-stone-50 p-8 rounded-sm">
+            <h3 className="font-serif text-lg font-bold text-stone-900 m-0 mb-2">
+              No matching products found
+            </h3>
+            <p className="text-xs text-stone-500 max-w-md mx-auto mb-5 leading-relaxed">
+              We couldn&apos;t find any items matching your current filters. Try resetting your filters to explore our full collection.
             </p>
             <Link
               href={`/${slug}`}
-              className="text-xs font-semibold uppercase tracking-wider text-[var(--ink)] underline"
+              className="inline-flex items-center justify-center px-6 py-2.5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold uppercase tracking-wider rounded-xs no-underline transition-colors"
             >
               Reset Filters
             </Link>
           </div>
         ) : (
-          /* Dense Indian e-commerce Grid: 4 cols at 1280px, 3 at 1024px, 2 on tablet/mobile */
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3.5 md:gap-5">
             {products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
         )}
 
-        {/* Load More Button & Pagination (SEO-crawlable) */}
+        {/* Load More Button & Pagination */}
         {totalPages > 1 && (
           <div className="mt-12 flex flex-col items-center gap-4">
             {currentPage < totalPages && (
               <Link
                 href={buildPageUrl(currentPage + 1)}
-                className="px-8 py-3 bg-[var(--ink)] hover:bg-[var(--accent-bridal)] text-white text-xs font-semibold uppercase tracking-wider rounded-[2px] transition-colors no-underline"
+                className="px-8 py-3 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold uppercase tracking-widest rounded-xs transition-colors no-underline shadow-xs"
               >
                 Load more products
               </Link>
             )}
 
-            {/* Standard Accessible Page Links */}
             <nav aria-label="Pagination" className="flex items-center gap-1.5 pt-2">
               {Array.from({ length: totalPages }).map((_, i) => {
                 const pageNumber = i + 1;
@@ -242,10 +240,10 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
                     key={pageNumber}
                     href={buildPageUrl(pageNumber)}
                     className={clsx(
-                      'w-8 h-8 flex items-center justify-center text-xs font-medium border rounded-[2px] transition-colors no-underline',
+                      'w-8 h-8 flex items-center justify-center text-xs font-medium border rounded-xs transition-colors no-underline',
                       isCurrent
-                        ? 'border-[var(--ink)] bg-[var(--ink)] text-white font-semibold'
-                        : 'border-[var(--line)] bg-white text-[var(--ink)] hover:border-gray-500'
+                        ? 'border-stone-900 bg-stone-900 text-white font-bold'
+                        : 'border-stone-200 bg-white text-stone-900 hover:border-stone-400'
                     )}
                   >
                     {pageNumber}
@@ -256,6 +254,12 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
           </div>
         )}
       </div>
+
+      {/* 6. Editorial Story, Care & Usage Rituals Section */}
+      <CategoryEditorialStory slug={slug} />
+
+      {/* 7. Persistent WhatsApp Assistance Button */}
+      <FloatingWhatsApp categorySlug={slug} categoryName={category.name} />
     </>
   );
 }

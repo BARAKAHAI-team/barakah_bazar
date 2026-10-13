@@ -116,101 +116,162 @@ export const Header: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-[var(--surface)] border-t-2 border-[var(--accent-bridal)]">
-      {/* Top Announcement Bar: Renders ONLY if active notice exists in DB. Default: no bar at all */}
+    <header className="sticky top-0 z-40 bg-[var(--surface)] border-t-2 border-[#C89B3C]">
+      {/* Signature Arabian Gold Top Ribbon from reference site */}
+      <div className="bg-gradient-to-r from-[#8F681F] via-[#C89B3C] to-[#8F681F] text-white text-[11px] py-1.5 px-4 tracking-wide shadow-2xs">
+        <div className="max-w-[1280px] mx-auto flex items-center justify-between">
+          <span className="hidden sm:inline font-medium">✨ Free Pan-India Delivery on Orders Above ₹1,499</span>
+          <span className="mx-auto sm:mx-0 font-bold tracking-[0.18em] uppercase text-[10px] sm:text-[11px]">
+            GOODNESS &bull; ELEGANCE &bull; BLESSINGS
+          </span>
+          <a
+            href="https://wa.me/918951789665"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden md:inline hover:underline text-white font-semibold text-[11px]"
+          >
+            WhatsApp Support: +91 8951789665
+          </a>
+        </div>
+      </div>
+
+      {/* Top Announcement Bar: Renders ONLY if active notice exists in DB */}
       {activeNotice && (
         <div className="bg-[var(--surface-subtle)] text-[var(--ink)] text-xs py-2 px-4 border-b border-[var(--line)] text-center">
           <p className="max-w-[1200px] mx-auto m-0 font-medium">{activeNotice}</p>
         </div>
       )}
 
-      {/* Main Row: ~64px height */}
-      <div className="border-b border-[var(--line)]">
-        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-          {/* Left: Mobile menu toggle + Logo (wordmark only) */}
+      {/* Main Row: Refined Navigation with Georgia Links & Circular Gold Buttons */}
+      <div className="border-b border-[#EADFC8] bg-[#FFFDF9]/98 backdrop-blur-md">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 h-18 sm:h-20 flex items-center justify-between gap-4">
+          {/* Left: Mobile menu toggle + Logo with tagline */}
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
               aria-label="Open menu"
-              className="md:hidden p-2 -ml-2 text-[var(--ink)] hover:bg-[var(--surface-subtle)] rounded-[2px] cursor-pointer"
+              className="lg:hidden p-2 -ml-2 text-[#241F17] hover:bg-[#FAF6EE] rounded-full border border-[#EADFC8] cursor-pointer"
             >
-              <Menu size={20} strokeWidth={1.5} />
+              <Menu size={18} strokeWidth={1.75} />
             </button>
 
-            <Link href="/" className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-[var(--ink)] no-underline">
-              Barakah Bazaar
+            <Link href="/" className="group no-underline">
+              <span className="font-serif text-2xl sm:text-[26px] font-bold tracking-tight text-[#9A7025] group-hover:text-[#805B18] transition-colors block leading-none">
+                Barakah Bazaar
+              </span>
+              <small className="block font-sans text-[7.5px] sm:text-[8.5px] font-extrabold tracking-[0.22em] text-[#756246] uppercase mt-1">
+                GOODNESS &bull; ELEGANCE &bull; BLESSINGS
+              </small>
             </Link>
           </div>
 
-          {/* Center: Search (flexible width, square button) */}
-          <form
-            onSubmit={handleSearchSubmit}
-            className="hidden md:flex flex-1 max-w-md mx-6 relative items-stretch"
-          >
-            <div className="relative flex-1">
-              <input
-                type="text"
-                placeholder="Search for bridal lehengas, spices, oils..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-10 pl-9 pr-3 bg-white border border-gray-300 rounded-[2px] text-xs text-gray-900 placeholder:text-gray-400 outline-hidden focus:border-[var(--accent-bridal)]"
-              />
-              <Search
-                size={15}
-                strokeWidth={1.5}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--ink-muted)] pointer-events-none"
-              />
-            </div>
-            <button
-              type="submit"
-              className="ml-2 px-4 h-10 bg-[var(--ink)] hover:bg-[var(--accent-bridal)] text-white text-xs font-medium rounded-[2px] cursor-pointer transition-colors"
+          {/* Center: Desktop Navigation Links (Non-category links) */}
+          <nav aria-label="Main navigation" className="hidden lg:flex items-center gap-7">
+            <Link
+              href="/"
+              className={clsx(
+                'font-serif text-[13px] font-semibold tracking-wide transition-colors no-underline',
+                pathname === '/' ? 'text-[#9A7025] underline decoration-[#C89B3C] underline-offset-8' : 'text-[#241F17] hover:text-[#9A7025]'
+              )}
             >
-              Search
-            </button>
-          </form>
+              Home
+            </Link>
+            <Link
+              href="/#collections"
+              className="font-serif text-[13px] font-semibold tracking-wide text-[#241F17] hover:text-[#9A7025] transition-colors no-underline"
+            >
+              Collections
+            </Link>
+            <Link
+              href="/#featured"
+              className="font-serif text-[13px] font-semibold tracking-wide text-[#241F17] hover:text-[#9A7025] transition-colors no-underline"
+            >
+              Featured
+            </Link>
+            <Link
+              href="/#philosophy"
+              className="font-serif text-[13px] font-semibold tracking-wide text-[#241F17] hover:text-[#9A7025] transition-colors no-underline"
+            >
+              Our Story
+            </Link>
+            <Link
+              href="/contact"
+              className={clsx(
+                'font-serif text-[13px] font-semibold tracking-wide transition-colors no-underline',
+                pathname === '/contact' ? 'text-[#9A7025] underline decoration-[#C89B3C] underline-offset-8' : 'text-[#241F17] hover:text-[#9A7025]'
+              )}
+            >
+              Contact Us
+            </Link>
+          </nav>
 
-          {/* Right: Actions (Wishlist, Cart, Account) */}
-          <div className="flex items-center gap-2 sm:gap-4">
+          {/* Right: Search Pill & Circular Action Buttons */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Search Pill */}
+            <form
+              onSubmit={handleSearchSubmit}
+              className="hidden md:flex relative items-center"
+            >
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-44 lg:w-52 h-9 pl-8 pr-3 bg-white border border-[#EADFC8] rounded-full text-xs text-[#241F17] placeholder:text-[#8A8273] outline-hidden focus:border-[#C89B3C] focus:w-60 transition-all shadow-2xs"
+                />
+                <Search
+                  size={14}
+                  strokeWidth={1.75}
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#9A7025] pointer-events-none"
+                />
+              </div>
+            </form>
+
             <Link
               href="/search"
               aria-label="Search"
-              className="md:hidden p-2 text-[var(--ink)] hover:bg-[var(--surface-subtle)] rounded-[2px]"
+              className="md:hidden w-9 h-9 rounded-full border border-[#EADFC8] bg-white flex items-center justify-center text-[#79591F] hover:border-[#C89B3C] hover:bg-[#FAF6EE] transition-colors"
             >
-              <Search size={20} strokeWidth={1.5} />
+              <Search size={16} strokeWidth={1.75} />
             </Link>
 
+            {/* Circular Wishlist Button */}
             <Link
               href="/wishlist"
               aria-label={`Wishlist (${wishlistCount} items)`}
-              className="flex items-center gap-1.5 px-2 py-1.5 text-[var(--ink)] hover:text-[var(--accent-bridal)] rounded-[2px] transition-colors no-underline"
+              className="w-9 h-9 rounded-full border border-[#EADFC8] bg-white flex items-center justify-center text-[#79591F] hover:border-[#C89B3C] hover:bg-[#FAF6EE] transition-colors relative no-underline shadow-2xs"
             >
-              <Heart size={18} strokeWidth={1.5} />
-              <span className="text-[12px] font-medium hidden sm:inline">
-                Wishlist {wishlistCount > 0 ? `(${wishlistCount})` : ''}
-              </span>
+              <Heart size={16} strokeWidth={1.75} />
+              {wishlistCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#A51F22] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                  {wishlistCount}
+                </span>
+              )}
             </Link>
 
+            {/* Circular Cart Button */}
             <Link
               href="/cart"
               aria-label={`Cart (${cartCount} items)`}
-              className="flex items-center gap-1.5 px-2 py-1.5 text-[var(--ink)] hover:text-[var(--accent-bridal)] rounded-[2px] transition-colors no-underline"
+              className="w-9 h-9 rounded-full border border-[#EADFC8] bg-white flex items-center justify-center text-[#79591F] hover:border-[#C89B3C] hover:bg-[#FAF6EE] transition-colors relative no-underline shadow-2xs"
             >
-              <ShoppingBag size={18} strokeWidth={1.5} />
-              <span className="text-[12px] font-medium">
-                Cart {cartCount > 0 ? `(${cartCount})` : ''}
-              </span>
+              <ShoppingBag size={16} strokeWidth={1.75} />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#C89B3C] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                  {cartCount}
+                </span>
+              )}
             </Link>
 
+            {/* Circular Account Button */}
             <Link
               href={isLoggedIn ? '/account' : '/login'}
               aria-label={isLoggedIn ? 'Account' : 'Sign in'}
-              className="flex items-center gap-1.5 px-2 py-1.5 text-[var(--ink)] hover:text-[var(--accent-bridal)] rounded-[2px] transition-colors no-underline"
+              className="w-9 h-9 rounded-full border border-[#EADFC8] bg-white flex items-center justify-center text-[#79591F] hover:border-[#C89B3C] hover:bg-[#FAF6EE] transition-colors no-underline shadow-2xs"
             >
-              <User size={18} strokeWidth={1.5} />
-              <span className="text-[12px] font-medium hidden sm:inline">
-                {isLoggedIn ? (clientStore.userName ? clientStore.userName.split(' ')[0] : 'Account') : 'Sign in'}
-              </span>
+              <User size={16} strokeWidth={1.75} />
             </Link>
           </div>
         </div>
@@ -236,29 +297,47 @@ export const Header: React.FC = () => {
             <Search size={15} strokeWidth={1.5} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--ink-muted)]" />
           </form>
 
-          <nav aria-label="Drawer category navigation" className="flex flex-col gap-1 mt-2">
-            {CATEGORY_NAV_LINKS.map((link) => {
-              const isActive = activeCategory?.href === link.href;
-              return (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  style={{
-                    borderLeftColor: isActive ? link.accent : 'transparent',
-                  }}
-                  className={clsx(
-                    'flex items-center justify-between p-3 text-sm font-medium border-l-2 no-underline transition-colors',
-                    isActive
-                      ? 'bg-[var(--surface-subtle)] text-[var(--ink)] font-semibold'
-                      : 'text-[var(--ink)] hover:bg-[var(--surface-subtle)]'
-                  )}
-                >
-                  <span>{link.label}</span>
-                  <ChevronRight size={15} className="text-[var(--ink-muted)]" />
-                </Link>
-              );
-            })}
+          <nav aria-label="Drawer navigation" className="flex flex-col gap-1 mt-2">
+            <Link
+              href="/"
+              onClick={() => setMobileMenuOpen(false)}
+              className="p-3 text-sm text-[var(--ink)] hover:bg-[var(--surface-subtle)] font-medium no-underline flex items-center justify-between"
+            >
+              <span>Home</span>
+              <ChevronRight size={15} className="text-[var(--ink-muted)]" />
+            </Link>
+            <Link
+              href="/#collections"
+              onClick={() => setMobileMenuOpen(false)}
+              className="p-3 text-sm text-[var(--ink)] hover:bg-[var(--surface-subtle)] font-medium no-underline flex items-center justify-between"
+            >
+              <span>Collections</span>
+              <ChevronRight size={15} className="text-[var(--ink-muted)]" />
+            </Link>
+            <Link
+              href="/#featured"
+              onClick={() => setMobileMenuOpen(false)}
+              className="p-3 text-sm text-[var(--ink)] hover:bg-[var(--surface-subtle)] font-medium no-underline flex items-center justify-between"
+            >
+              <span>Featured</span>
+              <ChevronRight size={15} className="text-[var(--ink-muted)]" />
+            </Link>
+            <Link
+              href="/#philosophy"
+              onClick={() => setMobileMenuOpen(false)}
+              className="p-3 text-sm text-[var(--ink)] hover:bg-[var(--surface-subtle)] font-medium no-underline flex items-center justify-between"
+            >
+              <span>Our Story</span>
+              <ChevronRight size={15} className="text-[var(--ink-muted)]" />
+            </Link>
+            <Link
+              href="/contact"
+              onClick={() => setMobileMenuOpen(false)}
+              className="p-3 text-sm text-[var(--ink)] hover:bg-[var(--surface-subtle)] font-medium no-underline flex items-center justify-between"
+            >
+              <span>Contact Us</span>
+              <ChevronRight size={15} className="text-[var(--ink-muted)]" />
+            </Link>
           </nav>
 
           <div className="border-t border-[var(--line)] my-2" />

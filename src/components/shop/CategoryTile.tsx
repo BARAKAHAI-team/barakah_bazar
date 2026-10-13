@@ -12,8 +12,8 @@ export interface CategoryTileProps {
   description: string;
   accent?: string;
   bgClass?: string;
-  imageUrl?: string;
-  tagline?: string;
+  imageUrl?: string | null;
+  tagline?: string | null;
 }
 
 interface CategoryConfig {
@@ -33,44 +33,38 @@ const CATEGORY_CUSTOMIZATIONS: Record<string, CategoryConfig> = {
   bridal: {
     badge: 'Royal Heritage Atelier',
     ctaText: 'Explore Bridal Edit',
-    pills: ['Bespoke Lehengas', 'Zari & Zardozi', 'Polki & Kundan Ornaments', 'Organza Sarees'],
-    heroImage:
-      'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=1200&auto=format&fit=crop',
-    detailImage:
-      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=600&auto=format&fit=crop',
-    detailLabel: 'Pure Silk & Hand Needlework',
-    ratingText: '4.9 ★ Bespoke Couture',
+    pills: ['Handcrafted Zari & Tilla', 'Festive Lehengas & Suits', 'Pan-India Insured Dispatch', 'Flat 31% Off'],
+    heroImage: '/images/bridal/hero.jpeg',
+    detailImage: '/images/bridal/bridal-01.jpeg',
+    detailLabel: 'Bespoke Needlework & Silks',
+    ratingText: '4.9 ★ Royal Couture',
     gradientBg: 'from-[#4D0D17] via-[#6E1423] to-[#36080E]',
     blendGradient: 'from-[#4D0D17]',
     badgeStyle: 'text-amber-200 border-amber-300/30 bg-amber-950/50 shadow-amber-950/40',
   },
   naturals: {
-    badge: '100% Farm-Direct Harvest',
-    ctaText: 'Explore Farm Produce',
-    pills: ['Wayanad Turmeric', 'Idukki Green Cardamom', 'Kashmir Saffron', 'Zero Additives'],
-    heroImage:
-      'https://images.unsplash.com/photo-1615485500704-8e990f9900f7?q=80&w=1200&auto=format&fit=crop',
-    detailImage:
-      'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?q=80&w=600&auto=format&fit=crop',
-    detailLabel: 'Sun-Dried Malabar Harvest',
-    ratingText: '4.9 ★ Single Origin',
-    gradientBg: 'from-[#123916] via-[#1B4E20] to-[#0A220D]',
-    blendGradient: 'from-[#123916]',
-    badgeStyle: 'text-emerald-200 border-emerald-300/30 bg-emerald-950/50 shadow-emerald-950/40',
+    badge: 'Artisanal Candles & Organics',
+    ctaText: 'Explore Naturals Edit',
+    pills: ['100% Pure Soy Wax', 'Hand-Poured Scented Candles', 'Alleppey Turmeric', 'Clean Smokeless Burn'],
+    heroImage: '/images/naturals/home-hero-candles.jpg',
+    detailImage: '/images/naturals/trio-rose-love.jpg',
+    detailLabel: 'Botanical Aromatherapy',
+    ratingText: '4.9 ★ Mindful Living',
+    gradientBg: 'from-[#3B1522] via-[#5B1730] to-[#240A14]',
+    blendGradient: 'from-[#3B1522]',
+    badgeStyle: 'text-rose-200 border-rose-300/30 bg-rose-950/50 shadow-rose-950/40',
   },
   'coconut-oil': {
-    badge: 'Traditional Wood & Cold Pressed',
+    badge: 'Traditional Cold-Pressed Heritage',
     ctaText: 'Shop Kerala Coconut Oil',
-    pills: ['Sun-Dried Copra', 'Slow Wood-Pressed', 'Unrefined & Pure', 'Culinary & Haircare'],
-    heroImage:
-      'https://images.unsplash.com/photo-1526947425960-945c6e72858f?q=80&w=1200&auto=format&fit=crop',
-    detailImage:
-      'https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?q=80&w=600&auto=format&fit=crop',
-    detailLabel: 'Sun-Dried Kerala Copra',
+    pills: ['Sun-Dried Kerala Copra', 'Marachekku Wood Pressed', 'Unrefined & Pure', 'Hair, Skin & Cooking'],
+    heroImage: '/images/oil/product-1.jpeg',
+    detailImage: '/images/oil/product-2.jpeg',
+    detailLabel: '100% Pure & Unrefined',
     ratingText: '5.0 ★ Heirloom Quality',
-    gradientBg: 'from-[#4A290B] via-[#6B3C11] to-[#2E1805]',
-    blendGradient: 'from-[#4A290B]',
-    badgeStyle: 'text-amber-200 border-amber-300/30 bg-amber-950/50 shadow-amber-950/40',
+    gradientBg: 'from-[#0C2915] via-[#123B20] to-[#081C0E]',
+    blendGradient: 'from-[#0C2915]',
+    badgeStyle: 'text-emerald-200 border-emerald-300/30 bg-emerald-950/50 shadow-emerald-950/40',
   },
 };
 
