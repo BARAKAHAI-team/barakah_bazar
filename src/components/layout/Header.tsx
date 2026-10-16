@@ -213,18 +213,18 @@ export const Header: React.FC = () => {
 
         {/* Center: Brand Logo */}
         <div className="text-center">
-          <Link href="/" className="inline-block text-center group no-underline min-w-[200px] sm:min-w-[240px]">
-            <span className="font-serif text-[27px] sm:text-[29px] font-bold text-[#9b6d1e] tracking-tight block leading-[0.85]">
+          <Link href="/" className="inline-block text-center group no-underline min-w-[140px] sm:min-w-[240px]">
+            <span className="font-serif text-[21px] sm:text-[29px] font-bold text-[#9b6d1e] tracking-tight block leading-[0.85]">
               BarakahBazaar
             </span>
-            <small className="block font-sans text-[7px] sm:text-[7.5px] font-bold tracking-[2px] text-[#756246] uppercase mt-1 sm:mt-1.5">
+            <small className="block font-sans text-[6.5px] sm:text-[7.5px] font-bold tracking-[1.5px] sm:tracking-[2px] text-[#756246] uppercase mt-1 sm:mt-1.5">
               GOODNESS &bull; ELEGANCE &bull; BLESSINGS
             </small>
           </Link>
         </div>
 
         {/* Right: Search Pill & 3 Circular Buttons matching reference */}
-        <div className="flex items-center gap-2 sm:gap-2.5">
+        <div className="flex items-center gap-1.5 sm:gap-2.5">
           {/* Search Pill */}
           <form
             onSubmit={handleSearchSubmit}
@@ -251,25 +251,25 @@ export const Header: React.FC = () => {
           <Link
             href="/search"
             aria-label="Search"
-            className="md:hidden w-[37px] h-[37px] rounded-full border border-[#EADFC8] bg-white flex items-center justify-center text-[#79591F] hover:border-[#C89B3C] hover:bg-[#FAF6EE] transition-colors"
+            className="md:hidden w-[34px] sm:w-[37px] h-[34px] sm:h-[37px] rounded-full border border-[#EADFC8] bg-white flex items-center justify-center text-[#79591F] hover:border-[#C89B3C] hover:bg-[#FAF6EE] transition-colors"
           >
-            <Search size={15} strokeWidth={1.75} />
+            <Search size={14} strokeWidth={1.75} />
           </Link>
 
           {/* Circle 1: User / Profile */}
           <Link
             href={mounted && isLoggedIn ? '/account' : '/login'}
             aria-label={mounted && isLoggedIn ? 'Account' : 'Sign in'}
-            className="w-[37px] h-[37px] rounded-full border border-[#EADFC8] bg-white flex items-center justify-center text-[#79591F] hover:border-[#C89B3C] hover:bg-[#FAF6EE] transition-colors no-underline shadow-2xs"
+            className="w-[34px] sm:w-[37px] h-[34px] sm:h-[37px] rounded-full border border-[#EADFC8] bg-white flex items-center justify-center text-[#79591F] hover:border-[#C89B3C] hover:bg-[#FAF6EE] transition-colors no-underline shadow-2xs"
           >
-            <User size={15} strokeWidth={1.75} />
+            <User size={14} strokeWidth={1.75} />
           </Link>
 
           {/* Circle 2: Wishlist */}
           <Link
             href="/wishlist"
             aria-label={`Wishlist (${wishlistCount} items)`}
-            className="w-[37px] h-[37px] rounded-full border border-[#EADFC8] bg-white flex items-center justify-center text-[#79591F] hover:border-[#C89B3C] hover:bg-[#FAF6EE] transition-colors relative no-underline shadow-2xs"
+            className="hidden sm:flex w-[37px] h-[37px] rounded-full border border-[#EADFC8] bg-white items-center justify-center text-[#79591F] hover:border-[#C89B3C] hover:bg-[#FAF6EE] transition-colors relative no-underline shadow-2xs"
           >
             <Heart size={15} strokeWidth={1.75} />
             {mounted && wishlistCount > 0 && (

@@ -27,20 +27,20 @@ export default function LandingPage() {
         </div>
 
         {/* Hero inner copy */}
-        <div className="relative w-[min(1180px,91%)] mx-auto py-[92px] pb-[105px] z-10">
-          <div className="text-[10px] tracking-[5px] text-[#b98725] font-black uppercase">
+        <div className="relative w-[min(1180px,91%)] mx-auto py-[72px] sm:py-[92px] pb-[85px] sm:pb-[105px] z-10">
+          <div className="text-[10px] tracking-[4px] sm:tracking-[5px] text-[#b98725] font-black uppercase">
             ONE BEAUTIFUL MARKETPLACE
           </div>
-          <h1 className="font-serif text-[clamp(48px,6.3vw,82px)] leading-[0.91] max-w-[640px] my-[17px] text-[#16140f] font-bold tracking-tight">
+          <h1 className="font-serif text-[clamp(36px,6vw,82px)] leading-[0.95] sm:leading-[0.91] max-w-[640px] my-[15px] sm:my-[17px] text-[#16140f] font-bold tracking-tight">
             EVERYTHING<br />WITH <span className="italic text-[#b98725]">BARAKAH</span>
           </h1>
-          <p className="max-w-[520px] text-[#625d53] text-[15px] sm:text-[16px] leading-[1.8] font-normal my-0">
+          <p className="max-w-[520px] text-[#625d53] text-[14px] sm:text-[16px] leading-[1.7] sm:leading-[1.8] font-normal my-0">
             KERALA PURE &nbsp; &bull; &nbsp; BRIDAL COLLECTION &nbsp; &bull; &nbsp; BARAKAH NATURALS
           </p>
           <div className="pt-2">
             <a
               href="#collections"
-              className="inline-flex items-center gap-2 bg-[#b98725] hover:bg-[#a6771d] text-white px-[23px] py-[14px] rounded-[4px] text-[11px] font-black tracking-[1.2px] mt-[10px] shadow-[0_8px_24px_rgba(185,135,37,0.24)] transition-all no-underline uppercase"
+              className="inline-flex items-center justify-center gap-2 bg-[#b98725] hover:bg-[#a6771d] text-white px-[20px] sm:px-[23px] py-[13px] sm:py-[14px] rounded-[4px] text-[11px] font-black tracking-[1.2px] mt-[10px] shadow-[0_8px_24px_rgba(185,135,37,0.24)] transition-all no-underline uppercase"
             >
               <span>EXPLORE OUR COLLECTIONS</span>
               <span>&rarr;</span>

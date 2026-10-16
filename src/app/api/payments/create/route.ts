@@ -58,13 +58,46 @@ export async function POST(req: NextRequest) {
 
     const amount = order.total_paise;
     const keyId = process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_placeholder';
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
     // Check if uncaptured payment already exists for this order
     let existingPayment = memoryPayments.get(orderId);
     let rzpOrderId = existingPayment ? existingPayment.razorpayOrderId : '';
 
     if (!existingPayment || existingPayment.status !== 'CREATED') {
-      rzpOrderId = `order_mock_${Date.now()}`;
+      if (
+        keyId &&
+        keySecret &&
+        !keyId.includes('placeholder') &&
+        !keySecret.includes('placeholder')
+      ) {
+        try {
+          // Dynamic import / instantiation of Razorpay SDK
+          const Razorpay = (await import('razorpay')).default;
+          const rzp = new Razorpay({
+            key_id: keyId,
+            key_secret: keySecret,
+          });
+
+          const createdRzpOrder = await rzp.orders.create({
+            amount: Math.round(amount),
+            currency: 'INR',
+            receipt: order.order_number,
+            notes: {
+              orderId,
+              userId: session.userId,
+            },
+          });
+
+          rzpOrderId = createdRzpOrder.id;
+        } catch (apiErr: any) {
+          console.warn('[Razorpay API Warning] Falling back to mock order:', apiErr.message);
+          rzpOrderId = `order_mock_${Date.now()}`;
+        }
+      } else {
+        rzpOrderId = `order_mock_${Date.now()}`;
+      }
+
       memoryPayments.set(orderId, {
         id: `pay_${Date.now()}`,
         orderId,

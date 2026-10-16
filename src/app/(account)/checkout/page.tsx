@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Script from 'next/script';
 import { Stepper } from '@/components/ui/Stepper';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -294,6 +295,9 @@ export default function CheckoutPage() {
             contact: orderToPay.notify_phone,
             email: orderToPay.notify_email || '',
           },
+          theme: {
+            color: '#C89B3C',
+          },
         });
         rzp.open();
       } else {
@@ -335,6 +339,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="max-w-[900px] mx-auto px-4 sm:px-6 py-6 sm:py-10">
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <Breadcrumbs items={[{ label: 'Cart', href: '/cart' }, { label: 'Checkout' }]} />
 
       <h1 className="font-serif text-3xl sm:text-4xl text-[var(--ink)] mt-4 mb-2">
@@ -433,7 +438,7 @@ export default function CheckoutPage() {
                 />
               </Field>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <Field label="City" required>
                   <Input value={addrCity} onChange={(e) => setAddrCity(e.target.value)} required />
                 </Field>

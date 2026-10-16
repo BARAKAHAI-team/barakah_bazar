@@ -98,7 +98,7 @@ export const QuickFilterBar: React.FC<QuickFilterBarProps> = ({
   if (currentPackSize) activeChips.push({ key: 'packSize', label: `Pack: ${currentPackSize}` });
 
   return (
-    <div className="sticky top-[64px] z-30 bg-white border-b border-[var(--line)] py-2.5">
+    <div className="sticky top-[120px] z-30 bg-white border-b border-[var(--line)] py-2.5">
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
         {/* Main Bar: Dropdowns on Desktop, Drawer Button on Mobile */}
         <div className="flex items-center justify-between gap-4" ref={dropdownRef}>
