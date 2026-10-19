@@ -27,6 +27,9 @@ export interface CatalogVariant {
 export interface CatalogImage {
   id: string;
   storage_path: string | null;
+  cloudinary_public_id?: string | null;
+  width?: number | null;
+  height?: number | null;
   alt: string;
   sort_order: number;
   is_primary: boolean;
@@ -44,6 +47,11 @@ export interface CatalogProduct {
   option_names: string[];
   badge: string | null;
   is_active: boolean;
+  is_featured?: boolean;
+  seo_title?: string | null;
+  seo_description?: string | null;
+  seo_keywords?: string[];
+  thumbnail_url?: string | null;
   variants: CatalogVariant[];
   images: CatalogImage[];
   created_at?: string;

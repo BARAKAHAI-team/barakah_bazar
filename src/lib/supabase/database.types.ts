@@ -66,6 +66,11 @@ export interface Database {
           option_names: string[];
           badge: string | null;
           is_active: boolean;
+          is_featured: boolean;
+          seo_title: string | null;
+          seo_description: string | null;
+          seo_keywords: string[];
+          thumbnail_url: string | null;
           created_at: string;
           updated_at: string;
           search_vector: unknown | null;
@@ -81,6 +86,11 @@ export interface Database {
           option_names?: string[];
           badge?: string | null;
           is_active?: boolean;
+          is_featured?: boolean;
+          seo_title?: string | null;
+          seo_description?: string | null;
+          seo_keywords?: string[];
+          thumbnail_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -95,6 +105,11 @@ export interface Database {
           option_names?: string[];
           badge?: string | null;
           is_active?: boolean;
+          is_featured?: boolean;
+          seo_title?: string | null;
+          seo_description?: string | null;
+          seo_keywords?: string[];
+          thumbnail_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -616,6 +631,51 @@ export interface Database {
           last_error?: string | null;
           created_at?: string;
           sent_at?: string | null;
+        };
+        Relationships: [];
+      };
+      site_banners: {
+        Row: {
+          id: string;
+          text: string;
+          highlight_text: string | null;
+          link_url: string | null;
+          badge_text: string | null;
+          bg_color: string;
+          text_color: string;
+          is_active: boolean;
+          starts_at: string;
+          ends_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          text: string;
+          highlight_text?: string | null;
+          link_url?: string | null;
+          badge_text?: string | null;
+          bg_color?: string;
+          text_color?: string;
+          is_active?: boolean;
+          starts_at?: string;
+          ends_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          text?: string;
+          highlight_text?: string | null;
+          link_url?: string | null;
+          badge_text?: string | null;
+          bg_color?: string;
+          text_color?: string;
+          is_active?: boolean;
+          starts_at?: string;
+          ends_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
         };
         Relationships: [];
       };

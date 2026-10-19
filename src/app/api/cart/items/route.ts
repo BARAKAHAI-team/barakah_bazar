@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { memoryCart, MemoryCartItem } from '../route';
+import { memoryCart } from '../route';
 import { SEED_PRODUCTS } from '@/lib/catalog/seed-data';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 const addItemSchema = z.object({
   variantId: z.string(),
@@ -39,7 +40,79 @@ export async function POST(req: NextRequest) {
 
     const { variantId, qty } = parsed.data;
 
-    // Look up variant stock
+    // Check Supabase for variant stock and insert
+    try {
+      if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        const supabase = createAdminClient() as any;
+
+        const { data: variant, error: varErr } = await supabase
+          .from('product_variants')
+          .select('id, stock, is_active')
+          .eq('id', variantId)
+          .single();
+
+        if (!varErr && variant) {
+          if (!variant.is_active) {
+            return NextResponse.json(
+              { ok: false, error: { code: 'NOT_FOUND', message: 'Item is currently unavailable.' } },
+              { status: 404 }
+            );
+          }
+
+          // Check existing cart item in Supabase
+          const { data: existing } = await supabase
+            .from('cart_items')
+            .select('id, qty')
+            .eq('user_id', session.userId)
+            .eq('variant_id', variantId)
+            .maybeSingle();
+
+          const existingQty = existing?.qty || 0;
+          const newQty = existingQty + qty;
+
+          if (newQty > variant.stock) {
+            return NextResponse.json(
+              {
+                ok: false,
+                error: {
+                  code: 'INSUFFICIENT_STOCK',
+                  message: `Only ${variant.stock} units available in stock.`,
+                },
+              },
+              { status: 400 }
+            );
+          }
+
+          if (existing) {
+            await supabase
+              .from('cart_items')
+              .update({ qty: newQty })
+              .eq('id', existing.id);
+          } else {
+            await supabase
+              .from('cart_items')
+              .insert({ user_id: session.userId, variant_id: variantId, qty: newQty });
+          }
+
+          const { data: allItems } = await supabase
+            .from('cart_items')
+            .select('qty')
+            .eq('user_id', session.userId);
+
+          const total = (allItems || []).reduce((acc: number, it: any) => acc + it.qty, 0);
+
+          return NextResponse.json({
+            ok: true,
+            message: 'Added to cart.',
+            totalItems: total,
+          });
+        }
+      }
+    } catch (err) {
+      console.warn('Supabase cart add error, using memory fallback:', err);
+    }
+
+    // Memory fallback
     let targetVariant = null;
     for (const prod of SEED_PRODUCTS) {
       const v = prod.variants.find((variant) => variant.id === variantId);

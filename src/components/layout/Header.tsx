@@ -41,7 +41,14 @@ export const Header: React.FC = () => {
   const [wishlistCount, setWishlistCount] = useState(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeNotice, setActiveNotice] = useState<string | null>(null);
+  const [activeNotice, setActiveNotice] = useState<{
+    text: string;
+    highlight_text?: string | null;
+    link_url?: string | null;
+    badge_text?: string | null;
+    bg_color?: string;
+    text_color?: string;
+  } | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -80,7 +87,7 @@ export const Header: React.FC = () => {
         if (noticeRes.ok) {
           const noticeData = await noticeRes.json();
           if (noticeData.notice?.text) {
-            setActiveNotice(noticeData.notice.text);
+            setActiveNotice(noticeData.notice);
           }
         }
       } catch {
@@ -117,6 +124,10 @@ export const Header: React.FC = () => {
     }
   };
 
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
+
   return (
     <header className="sticky top-0 z-40 bg-[var(--surface)] border-t-2 border-[#C89B3C]">
       {/* Signature Arabian Gold Top Ribbon matching reference site exactly */}
@@ -136,8 +147,30 @@ export const Header: React.FC = () => {
 
       {/* Top Announcement Bar: Renders ONLY if active notice exists in DB */}
       {activeNotice && (
-        <div className="bg-[var(--surface-subtle)] text-[var(--ink)] text-xs py-2 px-4 border-b border-[var(--line)] text-center">
-          <p className="max-w-[1200px] mx-auto m-0 font-medium">{activeNotice}</p>
+        <div
+          className="text-xs py-2 px-4 border-b border-[var(--line)] text-center transition-colors font-medium flex flex-wrap items-center justify-center gap-2"
+          style={{
+            backgroundColor: activeNotice.bg_color || 'var(--surface-subtle)',
+            color: activeNotice.text_color || 'var(--ink)',
+          }}
+        >
+          {activeNotice.badge_text && (
+            <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase">
+              {activeNotice.badge_text}
+            </span>
+          )}
+          <span>{activeNotice.text}</span>
+          {activeNotice.highlight_text && (
+            <span className="font-bold underline ml-1">{activeNotice.highlight_text}</span>
+          )}
+          {activeNotice.link_url && (
+            <Link
+              href={activeNotice.link_url}
+              className="underline font-bold ml-1.5 hover:opacity-85 text-inherit"
+            >
+              Shop Now &rarr;
+            </Link>
+          )}
         </div>
       )}
 

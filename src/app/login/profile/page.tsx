@@ -18,6 +18,17 @@ function ProfileCompletionForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  React.useEffect(() => {
+    fetch('/api/me')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.isAdmin || data?.role === 'admin' || data?.profile?.isAdmin || data?.profile?.role === 'admin') {
+          router.replace(nextUrl && nextUrl !== '/' ? nextUrl : '/admin');
+        }
+      })
+      .catch(() => {});
+  }, [router, nextUrl]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {

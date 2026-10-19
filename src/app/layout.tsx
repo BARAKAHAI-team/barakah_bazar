@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { Newsreader, Public_Sans } from 'next/font/google';
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
+import { StorefrontShell } from '@/components/layout/StorefrontShell';
 import { ToastProvider } from '@/components/ui/Toast';
 import './globals.css';
 
@@ -43,13 +42,7 @@ export default function RootLayout({
             Skip to content
           </a>
 
-          <Header />
-
-          <main id="main" className="flex-1">
-            {children}
-          </main>
-
-          <Footer />
+          <StorefrontShell>{children}</StorefrontShell>
         </ToastProvider>
       </body>
     </html>

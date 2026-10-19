@@ -118,6 +118,14 @@ export async function POST(req: NextRequest) {
       // Memory fallback
     }
 
+    // Determine admin role from environment whitelist or profile
+    const adminPhones = (process.env.ADMIN_PHONE_NUMBERS || '')
+      .split(',')
+      .map((p) => p.trim())
+      .filter(Boolean);
+
+    let role = adminPhones.includes(normalizedPhone) ? 'admin' : 'customer';
+
     // If fallback memory is used
     if (!userId) {
       let existing = memoryProfiles.get(normalizedPhone);
@@ -137,12 +145,16 @@ export async function POST(req: NextRequest) {
       profileCompleted = existing.profile_completed;
     }
 
+    const isAdmin = role === 'admin';
+
     // Set HTTP-only session cookie
     const response = NextResponse.json({
       ok: true,
       profileCompleted,
       userId,
       phone: normalizedPhone,
+      role,
+      isAdmin,
     });
 
     const sessionPayload = JSON.stringify({
@@ -151,6 +163,8 @@ export async function POST(req: NextRequest) {
       name: userName,
       email: userEmail,
       profileCompleted,
+      role,
+      isAdmin,
     });
 
     response.cookies.set('bz_session', sessionPayload, {

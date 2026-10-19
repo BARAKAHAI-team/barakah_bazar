@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export interface MemoryAddress {
   id: string;
@@ -53,6 +54,42 @@ export async function GET(req: NextRequest) {
     );
   }
 
+  // 1. Check Supabase first
+  try {
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      const supabase = createAdminClient();
+      const { data, error } = await supabase
+        .from('addresses')
+        .select('*')
+        .eq('user_id', session.userId)
+        .order('is_default', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        const formatted = data.map((a) => ({
+          id: a.id,
+          userId: a.user_id,
+          name: a.name,
+          phone: a.phone,
+          line1: a.line1,
+          line2: a.line2,
+          landmark: a.landmark,
+          city: a.city,
+          state: a.state,
+          pincode: a.pincode,
+          latitude: Number(a.latitude),
+          longitude: Number(a.longitude),
+          is_default: a.is_default,
+          created_at: a.created_at,
+        }));
+        return NextResponse.json({ ok: true, addresses: formatted });
+      }
+    }
+  } catch (err) {
+    console.warn('Supabase addresses query error:', err);
+  }
+
+  // Fallback to memory
   const addresses = memoryAddresses.get(session.userId) || [];
   return NextResponse.json({ ok: true, addresses });
 }
@@ -78,7 +115,67 @@ export async function POST(req: NextRequest) {
 
     const currentAddresses = memoryAddresses.get(session.userId) || [];
     const isFirst = currentAddresses.length === 0;
+    const isDefault = parsed.data.is_default !== undefined ? parsed.data.is_default : isFirst;
 
+    // Supabase insert if connected
+    try {
+      if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        const supabase = createAdminClient();
+
+        if (isDefault) {
+          // unset existing defaults
+          await supabase
+            .from('addresses')
+            .update({ is_default: false })
+            .eq('user_id', session.userId);
+        }
+
+        const { data: inserted, error: insertErr } = await supabase
+          .from('addresses')
+          .insert({
+            user_id: session.userId,
+            name: parsed.data.name,
+            phone: parsed.data.phone,
+            line1: parsed.data.line1,
+            line2: parsed.data.line2 || null,
+            landmark: parsed.data.landmark || null,
+            city: parsed.data.city,
+            state: parsed.data.state,
+            pincode: parsed.data.pincode,
+            latitude: parsed.data.latitude,
+            longitude: parsed.data.longitude,
+            is_default: isDefault,
+          })
+          .select()
+          .single();
+
+        if (!insertErr && inserted) {
+          return NextResponse.json({
+            ok: true,
+            address: {
+              id: inserted.id,
+              userId: inserted.user_id,
+              name: inserted.name,
+              phone: inserted.phone,
+              line1: inserted.line1,
+              line2: inserted.line2,
+              landmark: inserted.landmark,
+              city: inserted.city,
+              state: inserted.state,
+              pincode: inserted.pincode,
+              latitude: Number(inserted.latitude),
+              longitude: Number(inserted.longitude),
+              is_default: inserted.is_default,
+              created_at: inserted.created_at,
+            },
+          });
+        }
+      }
+    } catch (err) {
+      console.warn('Supabase insert address error, using memory:', err);
+    }
+
+    // Memory fallback
     const newAddress: MemoryAddress = {
       id: `addr_${Math.random().toString(36).substring(2, 9)}`,
       userId: session.userId,
@@ -92,7 +189,7 @@ export async function POST(req: NextRequest) {
       pincode: parsed.data.pincode,
       latitude: parsed.data.latitude,
       longitude: parsed.data.longitude,
-      is_default: parsed.data.is_default !== undefined ? parsed.data.is_default : isFirst,
+      is_default: isDefault,
       created_at: new Date().toISOString(),
     };
 

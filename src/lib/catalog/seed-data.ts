@@ -225,7 +225,7 @@ const bridalProducts: CatalogProduct[] = BRIDAL_DESIGNS.map((item, idx) => {
 
 const naturalsProducts: CatalogProduct[] = [
   {
-    id: 'n2222222-0000-0000-0000-000000000001',
+    id: 'a2222222-0000-0000-0000-000000000001',
     category_id: '22222222-2222-2222-2222-222222222222',
     category_slug: 'naturals',
     slug: 'trio-rose-love-candles',
@@ -257,7 +257,7 @@ const naturalsProducts: CatalogProduct[] = [
     variants: [
       {
         id: 'v-nat-1-std',
-        product_id: 'n2222222-0000-0000-0000-000000000001',
+        product_id: 'a2222222-0000-0000-0000-000000000001',
         sku: 'AR-HHS26',
         label: 'Set of 3',
         option_values: { 'Pack size': 'Set of 3' },
@@ -271,7 +271,7 @@ const naturalsProducts: CatalogProduct[] = [
     ],
   },
   {
-    id: 'n2222222-0000-0000-0000-000000000002',
+    id: 'a2222222-0000-0000-0000-000000000002',
     category_id: '22222222-2222-2222-2222-222222222222',
     category_slug: 'naturals',
     slug: 'luxe-bubble-glow-candle',
@@ -303,7 +303,7 @@ const naturalsProducts: CatalogProduct[] = [
     variants: [
       {
         id: 'v-nat-2-std',
-        product_id: 'n2222222-0000-0000-0000-000000000002',
+        product_id: 'a2222222-0000-0000-0000-000000000002',
         sku: 'AR-BBC26',
         label: 'Single Candle (180g)',
         option_values: { 'Pack size': 'Single Candle (180g)' },
@@ -317,7 +317,7 @@ const naturalsProducts: CatalogProduct[] = [
     ],
   },
   {
-    id: 'n2222222-0000-0000-0000-000000000003',
+    id: 'a2222222-0000-0000-0000-000000000003',
     category_id: '22222222-2222-2222-2222-222222222222',
     category_slug: 'naturals',
     slug: 'blooming-bouquet-luxe-candle',
@@ -349,7 +349,7 @@ const naturalsProducts: CatalogProduct[] = [
     variants: [
       {
         id: 'v-nat-3-std',
-        product_id: 'n2222222-0000-0000-0000-000000000003',
+        product_id: 'a2222222-0000-0000-0000-000000000003',
         sku: 'AR-BC26',
         label: 'Bouquet 220g',
         option_values: { 'Pack size': 'Bouquet 220g' },
@@ -363,7 +363,7 @@ const naturalsProducts: CatalogProduct[] = [
     ],
   },
   {
-    id: 'n2222222-0000-0000-0000-000000000004',
+    id: 'a2222222-0000-0000-0000-000000000004',
     category_id: '22222222-2222-2222-2222-222222222222',
     category_slug: 'naturals',
     slug: 'royal-moti-laddoo-candle-set',
@@ -395,7 +395,7 @@ const naturalsProducts: CatalogProduct[] = [
     variants: [
       {
         id: 'v-nat-4-std',
-        product_id: 'n2222222-0000-0000-0000-000000000004',
+        product_id: 'a2222222-0000-0000-0000-000000000004',
         sku: 'AR-FMC26',
         label: 'Set of 2',
         option_values: { 'Pack size': 'Set of 2' },
@@ -409,7 +409,7 @@ const naturalsProducts: CatalogProduct[] = [
     ],
   },
   {
-    id: 'n2222222-0000-0000-0000-000000000005',
+    id: 'a2222222-0000-0000-0000-000000000005',
     category_id: '22222222-2222-2222-2222-222222222222',
     category_slug: 'naturals',
     slug: 'royal-urli-aura-candle',
@@ -441,7 +441,7 @@ const naturalsProducts: CatalogProduct[] = [
     variants: [
       {
         id: 'v-nat-5-std',
-        product_id: 'n2222222-0000-0000-0000-000000000005',
+        product_id: 'a2222222-0000-0000-0000-000000000005',
         sku: 'AR-UC26',
         label: 'Grand Urli 280g',
         option_values: { 'Pack size': 'Grand Urli 280g' },
@@ -455,7 +455,7 @@ const naturalsProducts: CatalogProduct[] = [
     ],
   },
   {
-    id: 'n2222222-0000-0000-0000-000000000006',
+    id: 'a2222222-0000-0000-0000-000000000006',
     category_id: '22222222-2222-2222-2222-222222222222',
     category_slug: 'naturals',
     slug: 'eternal-couple-glow-candle',
@@ -487,7 +487,7 @@ const naturalsProducts: CatalogProduct[] = [
     variants: [
       {
         id: 'v-nat-6-std',
-        product_id: 'n2222222-0000-0000-0000-000000000006',
+        product_id: 'a2222222-0000-0000-0000-000000000006',
         sku: 'AR-CC26',
         label: 'Standard 240g',
         option_values: { 'Pack size': 'Standard 240g' },
@@ -501,7 +501,7 @@ const naturalsProducts: CatalogProduct[] = [
     ],
   },
   {
-    id: 'n2222222-0000-0000-0000-000000000007',
+    id: 'a2222222-0000-0000-0000-000000000007',
     category_id: '22222222-2222-2222-2222-222222222222',
     category_slug: 'naturals',
     slug: 'organic-turmeric-powder',
@@ -531,7 +531,7 @@ const naturalsProducts: CatalogProduct[] = [
     variants: [
       {
         id: 'v-tur-250',
-        product_id: 'n2222222-0000-0000-0000-000000000007',
+        product_id: 'a2222222-0000-0000-0000-000000000007',
         sku: 'NAT-TUR-250G',
         label: '250g Jar',
         option_values: { 'Pack size': '250g' },
@@ -544,7 +544,7 @@ const naturalsProducts: CatalogProduct[] = [
       },
       {
         id: 'v-tur-500',
-        product_id: 'n2222222-0000-0000-0000-000000000007',
+        product_id: 'a2222222-0000-0000-0000-000000000007',
         sku: 'NAT-TUR-500G',
         label: '500g Eco-Pouch',
         option_values: { 'Pack size': '500g' },
@@ -558,7 +558,7 @@ const naturalsProducts: CatalogProduct[] = [
     ],
   },
   {
-    id: 'n2222222-0000-0000-0000-000000000008',
+    id: 'a2222222-0000-0000-0000-000000000008',
     category_id: '22222222-2222-2222-2222-222222222222',
     category_slug: 'naturals',
     slug: 'tellicherry-black-pepper',
@@ -587,7 +587,7 @@ const naturalsProducts: CatalogProduct[] = [
     variants: [
       {
         id: 'v-pep-200',
-        product_id: 'n2222222-0000-0000-0000-000000000008',
+        product_id: 'a2222222-0000-0000-0000-000000000008',
         sku: 'NAT-PEP-200G',
         label: '200g Pack',
         option_values: { 'Pack size': '200g' },
@@ -601,7 +601,7 @@ const naturalsProducts: CatalogProduct[] = [
     ],
   },
   {
-    id: 'n2222222-0000-0000-0000-000000000009',
+    id: 'a2222222-0000-0000-0000-000000000009',
     category_id: '22222222-2222-2222-2222-222222222222',
     category_slug: 'naturals',
     slug: 'idukki-green-cardamom',
@@ -630,7 +630,7 @@ const naturalsProducts: CatalogProduct[] = [
     variants: [
       {
         id: 'v-car-100',
-        product_id: 'n2222222-0000-0000-0000-000000000009',
+        product_id: 'a2222222-0000-0000-0000-000000000009',
         sku: 'NAT-CAR-100G',
         label: '100g Airtight Tin',
         option_values: { 'Pack size': '100g' },

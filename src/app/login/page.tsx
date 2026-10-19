@@ -27,6 +27,18 @@ function LoginForm() {
   const digitInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
+    // If already logged in as admin, redirect to /admin directly
+    fetch('/api/me')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.isAdmin || data?.role === 'admin' || data?.profile?.isAdmin || data?.profile?.role === 'admin') {
+          router.replace(nextUrl && nextUrl !== '/' ? nextUrl : '/admin');
+        }
+      })
+      .catch(() => {});
+  }, [router, nextUrl]);
+
+  useEffect(() => {
     let timer: NodeJS.Timeout;
     if (step === 'otp' && resendSeconds > 0) {
       timer = setTimeout(() => setResendSeconds((s) => s - 1), 1000);
@@ -145,6 +157,13 @@ function LoginForm() {
       } else {
         toast('Welcome back! Logged in successfully.', 'success');
         clientStore.setAuth(true, data.phone);
+
+        // If user is admin, immediately open /admin control center (or specific admin nextUrl)
+        if (data.isAdmin || data.role === 'admin') {
+          const destination = nextUrl && nextUrl !== '/' ? nextUrl : '/admin';
+          router.push(destination);
+          return;
+        }
 
         // Check if new profile
         if (!data.profileCompleted) {

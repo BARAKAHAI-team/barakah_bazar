@@ -272,6 +272,12 @@ export default function AccountPage() {
                 setAddrLat(lat);
                 setAddrLng(lng);
               }}
+              onLocationFound={(loc) => {
+                if (loc.city) setAddrCity(loc.city);
+                if (loc.state) setAddrState(loc.state);
+                if (loc.pincode) setAddrPincode(loc.pincode);
+                if (loc.line1 && !addrLine1.trim()) setAddrLine1(loc.line1);
+              }}
             />
             <Button type="submit" variant="primary" size="sm">
               Save Address

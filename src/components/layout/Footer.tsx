@@ -1,9 +1,17 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { IndianMotifDivider } from '@/components/ui/IndianMotifDivider';
 import { SITE_CONFIG } from '@/lib/config/site';
 
 export const Footer: React.FC = () => {
+  const pathname = usePathname();
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
+
   return (
     <footer className="bg-[#1D1911] text-[#CFC7B7] pt-12 pb-8 mt-16 text-xs border-t-2 border-[#C89B3C]">
       {/* Main 4-Column Grid */}

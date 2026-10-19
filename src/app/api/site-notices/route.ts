@@ -1,26 +1,25 @@
 import { NextResponse } from 'next/server';
-import { createPublicClient } from '@/lib/supabase/public';
+import { getActiveBanner } from '@/lib/banners/banner-store';
 
 export async function GET() {
   try {
-    if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      const supabase = createPublicClient();
-      const { data, error } = await (supabase as any)
-        .from('site_notices')
-        .select('id, text')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (!error && data) {
-        return NextResponse.json({ notice: data });
-      }
+    const banner = await getActiveBanner();
+    if (banner && banner.is_active) {
+      return NextResponse.json({
+        notice: {
+          id: banner.id,
+          text: banner.text,
+          highlight_text: banner.highlight_text,
+          link_url: banner.link_url,
+          badge_text: banner.badge_text,
+          bg_color: banner.bg_color,
+          text_color: banner.text_color,
+        },
+      });
     }
   } catch {
-    // Database table not available or network error
+    // fallback
   }
 
-  // Default: no bar at all
   return NextResponse.json({ notice: null });
 }

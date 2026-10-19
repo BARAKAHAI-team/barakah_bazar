@@ -27,6 +27,13 @@ export async function GET(req: NextRequest) {
     );
   }
 
+  const adminPhones = (process.env.ADMIN_PHONE_NUMBERS || '')
+    .split(',')
+    .map((p) => p.trim())
+    .filter(Boolean);
+  const isAdmin = session.isAdmin || session.role === 'admin' || adminPhones.includes(session.phone);
+  const role = isAdmin ? 'admin' : (session.role || 'customer');
+
   // Look up profile
   try {
     if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -38,7 +45,16 @@ export async function GET(req: NextRequest) {
         .single();
 
       if (data && !error) {
-        return NextResponse.json({ ok: true, profile: data });
+        return NextResponse.json({
+          ok: true,
+          isAdmin,
+          role,
+          profile: {
+            ...data,
+            isAdmin,
+            role,
+          },
+        });
       }
     }
   } catch {
@@ -48,12 +64,16 @@ export async function GET(req: NextRequest) {
   const mem = memoryProfiles.get(session.phone);
   return NextResponse.json({
     ok: true,
+    isAdmin,
+    role,
     profile: {
       id: session.userId,
       phone: session.phone,
       name: session.name || mem?.name || null,
       email: session.email || mem?.email || null,
       profile_completed: session.profileCompleted || mem?.profile_completed || false,
+      isAdmin,
+      role,
     },
   });
 }

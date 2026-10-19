@@ -76,6 +76,11 @@ create table if not exists public.products (
   option_names text[] not null default '{}',
   badge text,
   is_active boolean not null default true,
+  is_featured boolean not null default false,
+  seo_title text null,
+  seo_description text null,
+  seo_keywords text[] not null default '{}',
+  thumbnail_url text null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   search_vector tsvector generated always as (
@@ -137,6 +142,7 @@ create table if not exists public.profiles (
   name text,
   phone text unique not null,
   email text null,
+  role text not null default 'customer' check (role in ('customer', 'admin', 'manager')),
   profile_completed boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -292,6 +298,28 @@ create trigger trg_payments_updated_at
   for each row execute function public.set_updated_at();
 
 create index if not exists idx_payments_order_id on public.payments(order_id);
+
+create table if not exists public.site_banners (
+  id uuid primary key default gen_random_uuid(),
+  text text not null,
+  highlight_text text null,
+  link_url text null,
+  badge_text text null,
+  bg_color text not null default '#0F3E2E',
+  text_color text not null default '#F9F6EE',
+  is_active boolean not null default true,
+  starts_at timestamptz not null default now(),
+  ends_at timestamptz null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+drop trigger if exists trg_site_banners_updated_at on public.site_banners;
+create trigger trg_site_banners_updated_at
+  before update on public.site_banners
+  for each row execute function public.set_updated_at();
+
+create index if not exists idx_site_banners_active on public.site_banners(is_active, starts_at, ends_at);
 create index if not exists idx_payments_razorpay_order on public.payments(razorpay_order_id);
 
 -- -----------------------------------------------------------------------------
@@ -954,7 +982,7 @@ on conflict (sku) do nothing;
 insert into public.products (id, category_id, slug, name, short_description, description, attributes, option_names, badge, is_active)
 values
   (
-    'n2222222-0000-0000-0000-000000000001',
+    'a2222222-0000-0000-0000-000000000001',
     '22222222-2222-2222-2222-222222222222',
     'organic-turmeric-powder',
     'Organic Turmeric Powder',
@@ -966,7 +994,7 @@ values
     true
   ),
   (
-    'n2222222-0000-0000-0000-000000000002',
+    'a2222222-0000-0000-0000-000000000002',
     '22222222-2222-2222-2222-222222222222',
     'organic-chilli-powder',
     'Organic Chilli Powder',
@@ -978,7 +1006,7 @@ values
     true
   ),
   (
-    'n2222222-0000-0000-0000-000000000003',
+    'a2222222-0000-0000-0000-000000000003',
     '22222222-2222-2222-2222-222222222222',
     'tellicherry-black-peppercorns',
     'Tellicherry Black Peppercorns',
@@ -990,7 +1018,7 @@ values
     true
   ),
   (
-    'n2222222-0000-0000-0000-000000000004',
+    'a2222222-0000-0000-0000-000000000004',
     '22222222-2222-2222-2222-222222222222',
     'green-cardamom-pods',
     'Green Cardamom Pods',
@@ -1002,7 +1030,7 @@ values
     true
   ),
   (
-    'n2222222-0000-0000-0000-000000000005',
+    'a2222222-0000-0000-0000-000000000005',
     '22222222-2222-2222-2222-222222222222',
     'raw-forest-honey',
     'Raw Forest Honey',
@@ -1014,7 +1042,7 @@ values
     true
   ),
   (
-    'n2222222-0000-0000-0000-000000000006',
+    'a2222222-0000-0000-0000-000000000006',
     '22222222-2222-2222-2222-222222222222',
     'dry-ginger-powder',
     'Dry Ginger Powder (Chukku)',
@@ -1030,30 +1058,30 @@ on conflict do nothing;
 -- Naturals Variants
 insert into public.product_variants (product_id, sku, label, option_values, price_paise, compare_at_price_paise, stock, net_quantity, net_unit, is_active)
 values
-  ('n2222222-0000-0000-0000-000000000001', 'NAT-TUR-100G', '100 g', '{"Pack size":"100 g"}'::jsonb, 8500,  10000, 25, 100, 'g', true),
-  ('n2222222-0000-0000-0000-000000000001', 'NAT-TUR-250G', '250 g', '{"Pack size":"250 g"}'::jsonb, 19500, 23000, 18, 250, 'g', true),
-  ('n2222222-0000-0000-0000-000000000001', 'NAT-TUR-500G', '500 g', '{"Pack size":"500 g"}'::jsonb, 36000, 42000, 10, 500, 'g', true),
-  ('n2222222-0000-0000-0000-000000000002', 'NAT-CHL-100G', '100 g', '{"Pack size":"100 g"}'::jsonb, 9500,  11000, 30, 100, 'g', true),
-  ('n2222222-0000-0000-0000-000000000002', 'NAT-CHL-250G', '250 g', '{"Pack size":"250 g"}'::jsonb, 22000, 26000, 15, 250, 'g', true),
-  ('n2222222-0000-0000-0000-000000000002', 'NAT-CHL-500G', '500 g', '{"Pack size":"500 g"}'::jsonb, 41000, 48000, 8,  500, 'g', true),
-  ('n2222222-0000-0000-0000-000000000003', 'NAT-PEP-100G', '100 g', '{"Pack size":"100 g"}'::jsonb, 18000, 21000, 20, 100, 'g', true),
-  ('n2222222-0000-0000-0000-000000000003', 'NAT-PEP-250G', '250 g', '{"Pack size":"250 g"}'::jsonb, 42000, 49000, 12, 250, 'g', true),
-  ('n2222222-0000-0000-0000-000000000003', 'NAT-PEP-500G', '500 g', '{"Pack size":"500 g"}'::jsonb, 79000, 92000, 4,  500, 'g', true),
-  ('n2222222-0000-0000-0000-000000000004', 'NAT-CRD-50G',  '50 g',  '{"Pack size":"50 g"}'::jsonb,  24000, 28000, 15, 50,  'g', true),
-  ('n2222222-0000-0000-0000-000000000004', 'NAT-CRD-100G', '100 g', '{"Pack size":"100 g"}'::jsonb, 46000, 52000, 10, 100, 'g', true),
-  ('n2222222-0000-0000-0000-000000000004', 'NAT-CRD-250G', '250 g', '{"Pack size":"250 g"}'::jsonb, 108000,120000,3, 250, 'g', true),
-  ('n2222222-0000-0000-0000-000000000005', 'NAT-HNY-250G', '250 g', '{"Pack size":"250 g"}'::jsonb, 28000, 32000, 14, 250, 'g', true),
-  ('n2222222-0000-0000-0000-000000000005', 'NAT-HNY-500G', '500 g', '{"Pack size":"500 g"}'::jsonb, 52000, 59000, 8,  500, 'g', true),
-  ('n2222222-0000-0000-0000-000000000005', 'NAT-HNY-1000G','1 kg',  '{"Pack size":"1 kg"}'::jsonb,  98000, 110000,2,  1000,'g', true),
-  ('n2222222-0000-0000-0000-000000000006', 'NAT-GNG-100G', '100 g', '{"Pack size":"100 g"}'::jsonb, 12000, 14000, 20, 100, 'g', true),
-  ('n2222222-0000-0000-0000-000000000006', 'NAT-GNG-250G', '250 g', '{"Pack size":"250 g"}'::jsonb, 27500, 31000, 12, 250, 'g', true),
-  ('n2222222-0000-0000-0000-000000000006', 'NAT-GNG-500G', '500 g', '{"Pack size":"500 g"}'::jsonb, 51000, 58000, 0,  500, 'g', true)
+  ('a2222222-0000-0000-0000-000000000001', 'NAT-TUR-100G', '100 g', '{"Pack size":"100 g"}'::jsonb, 8500,  10000, 25, 100, 'g', true),
+  ('a2222222-0000-0000-0000-000000000001', 'NAT-TUR-250G', '250 g', '{"Pack size":"250 g"}'::jsonb, 19500, 23000, 18, 250, 'g', true),
+  ('a2222222-0000-0000-0000-000000000001', 'NAT-TUR-500G', '500 g', '{"Pack size":"500 g"}'::jsonb, 36000, 42000, 10, 500, 'g', true),
+  ('a2222222-0000-0000-0000-000000000002', 'NAT-CHL-100G', '100 g', '{"Pack size":"100 g"}'::jsonb, 9500,  11000, 30, 100, 'g', true),
+  ('a2222222-0000-0000-0000-000000000002', 'NAT-CHL-250G', '250 g', '{"Pack size":"250 g"}'::jsonb, 22000, 26000, 15, 250, 'g', true),
+  ('a2222222-0000-0000-0000-000000000002', 'NAT-CHL-500G', '500 g', '{"Pack size":"500 g"}'::jsonb, 41000, 48000, 8,  500, 'g', true),
+  ('a2222222-0000-0000-0000-000000000003', 'NAT-PEP-100G', '100 g', '{"Pack size":"100 g"}'::jsonb, 18000, 21000, 20, 100, 'g', true),
+  ('a2222222-0000-0000-0000-000000000003', 'NAT-PEP-250G', '250 g', '{"Pack size":"250 g"}'::jsonb, 42000, 49000, 12, 250, 'g', true),
+  ('a2222222-0000-0000-0000-000000000003', 'NAT-PEP-500G', '500 g', '{"Pack size":"500 g"}'::jsonb, 79000, 92000, 4,  500, 'g', true),
+  ('a2222222-0000-0000-0000-000000000004', 'NAT-CRD-50G',  '50 g',  '{"Pack size":"50 g"}'::jsonb,  24000, 28000, 15, 50,  'g', true),
+  ('a2222222-0000-0000-0000-000000000004', 'NAT-CRD-100G', '100 g', '{"Pack size":"100 g"}'::jsonb, 46000, 52000, 10, 100, 'g', true),
+  ('a2222222-0000-0000-0000-000000000004', 'NAT-CRD-250G', '250 g', '{"Pack size":"250 g"}'::jsonb, 108000,120000,3, 250, 'g', true),
+  ('a2222222-0000-0000-0000-000000000005', 'NAT-HNY-250G', '250 g', '{"Pack size":"250 g"}'::jsonb, 28000, 32000, 14, 250, 'g', true),
+  ('a2222222-0000-0000-0000-000000000005', 'NAT-HNY-500G', '500 g', '{"Pack size":"500 g"}'::jsonb, 52000, 59000, 8,  500, 'g', true),
+  ('a2222222-0000-0000-0000-000000000005', 'NAT-HNY-1000G','1 kg',  '{"Pack size":"1 kg"}'::jsonb,  98000, 110000,2,  1000,'g', true),
+  ('a2222222-0000-0000-0000-000000000006', 'NAT-GNG-100G', '100 g', '{"Pack size":"100 g"}'::jsonb, 12000, 14000, 20, 100, 'g', true),
+  ('a2222222-0000-0000-0000-000000000006', 'NAT-GNG-250G', '250 g', '{"Pack size":"250 g"}'::jsonb, 27500, 31000, 12, 250, 'g', true),
+  ('a2222222-0000-0000-0000-000000000006', 'NAT-GNG-500G', '500 g', '{"Pack size":"500 g"}'::jsonb, 51000, 58000, 0,  500, 'g', true)
 on conflict (sku) do nothing;
 
 -- Product 7: Pure Kashmiri Mongra Saffron
 insert into public.products (id, category_id, slug, name, short_description, description, attributes, option_names, badge, is_active)
 values (
-  'n2222222-0000-0000-0000-000000000007',
+  'a2222222-0000-0000-0000-000000000007',
   '22222222-2222-2222-2222-222222222222',
   'kashmiri-mongra-pure-saffron',
   'Grade-A1 Pure Kashmiri Mongra Saffron (Kesar)',
@@ -1067,8 +1095,8 @@ values (
 
 insert into public.product_variants (product_id, sku, label, option_values, price_paise, compare_at_price_paise, stock, net_quantity, net_unit, is_active)
 values
-  ('n2222222-0000-0000-0000-000000000007', 'NAT-SAF-1G', '1 g', '{"Pack size":"1 g"}'::jsonb, 55000, 65000, 25, 1, 'g', true),
-  ('n2222222-0000-0000-0000-000000000007', 'NAT-SAF-5G', '5 g', '{"Pack size":"5 g"}'::jsonb, 240000, 280000, 10, 5, 'g', true)
+  ('a2222222-0000-0000-0000-000000000007', 'NAT-SAF-1G', '1 g', '{"Pack size":"1 g"}'::jsonb, 55000, 65000, 25, 1, 'g', true),
+  ('a2222222-0000-0000-0000-000000000007', 'NAT-SAF-5G', '5 g', '{"Pack size":"5 g"}'::jsonb, 240000, 280000, 10, 5, 'g', true)
 on conflict (sku) do nothing;
 
 -- 4 Coconut Oil Products
@@ -1187,3 +1215,15 @@ values
     0
   )
 on conflict (code) do nothing;
+
+-- Initial Promotional Banner
+insert into public.site_banners (text, highlight_text, link_url, badge_text, bg_color, text_color, is_active)
+values (
+  '✨ Grand Festive Launch: Free Delivery across India on all orders above ₹1,499!',
+  'LIMITED PERIOD',
+  '/coconut-oil',
+  'BARAKAH EXCLUSIVE',
+  '#0F3E2E',
+  '#F9F6EE',
+  true
+);
