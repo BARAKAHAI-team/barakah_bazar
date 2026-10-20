@@ -1,0 +1,26 @@
+# Barakah Bazaar - Premium Organic & Wellness Products
+> Handcrafted Bridal Ubtan, 100% Pure Cold-Pressed Coconut Oil, and Traditional Natural Beauty Formulations.
+
+## About Us
+Barakah Bazaar is an artisanal e-commerce brand offering heritage wellness and personal care essentials. We specialize in small-batch bridal skincare, cold-pressed virgin coconut oil, and all-natural botanicals prepared according to time-tested ancestral recipes with 100% pure ingredients.
+
+## Core Categories
+- **Bridal**: Traditional handmade Bridal Ubtan, Bridal Radiance Face Masks, and Haldi ceremony sets.
+- **Naturals**: Chemical-free herbal face packs, floral toners, saffron glow serums, and rose powders.
+- **Coconut Oil**: 100% wood-pressed (ghani) and cold-pressed extra virgin coconut oil for hair, skin, and culinary wellness.
+
+## Key Links
+- Homepage: https://barakah-bazar.vercel.app/
+- Bridal Collection: https://barakah-bazar.vercel.app/bridal
+- Naturals Collection: https://barakah-bazar.vercel.app/naturals
+- Coconut Oil: https://barakah-bazar.vercel.app/coconut-oil
+- Shipping & Delivery: https://barakah-bazar.vercel.app/policies/shipping
+- Returns & Refunds: https://barakah-bazar.vercel.app/policies/returns
+- Privacy Policy: https://barakah-bazar.vercel.app/policies/privacy
+- Terms of Service: https://barakah-bazar.vercel.app/policies/terms
+- Contact & Support: https://barakah-bazar.vercel.app/contact
+
+## Contact Information
+- Store: Barakah Bazaar
+- Customer Support: support@barakahbazar.com
+- Inquiries: Care & Orders via WhatsApp and Email
