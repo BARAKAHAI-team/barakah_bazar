@@ -5,6 +5,7 @@ import { memoryOrders } from '../../orders/route';
 import { memoryCart } from '../../cart/route';
 import { memoryPayments } from '../create/route';
 import { SEED_PRODUCTS } from '@/lib/catalog/seed-data';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 const schema = z.object({
   razorpay_order_id: z.string(),
@@ -61,20 +62,41 @@ export async function POST(req: NextRequest) {
     }
 
     // Find payment & order
-    const orders = memoryOrders.get(session.userId) || [];
-    let targetOrder = null;
+    let targetOrder: any = null;
 
-    for (const ord of orders) {
-      const payment = memoryPayments.get(ord.id);
-      if (payment && payment.razorpayOrderId === razorpay_order_id) {
-        targetOrder = ord;
-        break;
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      try {
+        const supabase = createAdminClient() as any;
+        const { data: dbOrders } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('user_id', session.userId)
+          .eq('order_status', 'PENDING_PAYMENT')
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (dbOrders && dbOrders.length > 0) {
+          targetOrder = dbOrders[0];
+        }
+      } catch (err) {
+        console.warn('Supabase order lookup in verify error:', err);
       }
     }
 
-    if (!targetOrder && orders.length > 0) {
-      // Fallback: match most recent pending order
-      targetOrder = orders.find((o) => o.order_status === 'PENDING_PAYMENT');
+    if (!targetOrder) {
+      const orders = memoryOrders.get(session.userId) || [];
+      for (const ord of orders) {
+        const payment = memoryPayments.get(ord.id);
+        if (payment && payment.razorpayOrderId === razorpay_order_id) {
+          targetOrder = ord;
+          break;
+        }
+      }
+
+      if (!targetOrder && orders.length > 0) {
+        // Fallback: match most recent pending order
+        targetOrder = orders.find((o) => o.order_status === 'PENDING_PAYMENT');
+      }
     }
 
     if (!targetOrder) {
@@ -93,10 +115,33 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Finalise Order (single atomic step)
+    // Update in Supabase
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      try {
+        const supabase = createAdminClient() as any;
+        await supabase
+          .from('orders')
+          .update({
+            payment_status: 'PAID',
+            order_status: 'CONFIRMED',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', targetOrder.id);
+
+        await supabase
+          .from('cart_items')
+          .delete()
+          .eq('user_id', session.userId);
+      } catch (err) {
+        console.warn('Supabase update order status error:', err);
+      }
+    }
+
+    // Finalise Order in memory
     targetOrder.payment_status = 'PAID';
     targetOrder.order_status = 'CONFIRMED';
     targetOrder.updated_at = new Date().toISOString();
+    if (!targetOrder.status_history) targetOrder.status_history = [];
     targetOrder.status_history.push({
       status: 'CONFIRMED',
       note: `Payment confirmed via Razorpay ID ${razorpay_payment_id}.`,
@@ -104,18 +149,19 @@ export async function POST(req: NextRequest) {
     });
 
     // Reduce stock for order items
-    // Edge case per CONTEXT.md 10: stock clamps at 0 if two buyers purchase the last unit
-    for (const item of targetOrder.items) {
-      for (const prod of SEED_PRODUCTS) {
-        const v = prod.variants.find((variant) => variant.id === item.variantId);
-        if (v) {
-          v.stock = Math.max(0, v.stock - item.qty);
-          break;
+    if (targetOrder.items) {
+      for (const item of targetOrder.items) {
+        for (const prod of SEED_PRODUCTS) {
+          const v = prod.variants.find((variant) => variant.id === item.variantId);
+          if (v) {
+            v.stock = Math.max(0, v.stock - item.qty);
+            break;
+          }
         }
       }
     }
 
-    // Clear purchased variants from user cart
+    // Clear purchased variants from user cart in memory
     memoryCart.delete(session.userId);
 
     // Update payment record status

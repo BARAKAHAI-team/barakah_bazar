@@ -99,8 +99,17 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
   if (loading) {
     return (
-      <div className="max-w-[900px] mx-auto px-4 py-16 text-center text-xs text-[var(--ink-muted)]">
-        Loading order details...
+      <div className="max-w-[900px] mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-8 animate-pulse">
+        <div className="h-4 bg-[var(--surface-sunken,#f0f0f0)] w-48 rounded" />
+        <div className="border-b border-[var(--line)] pb-6 space-y-3">
+          <div className="h-4 bg-[var(--surface-sunken,#f0f0f0)] w-28 rounded" />
+          <div className="h-8 bg-[var(--surface-sunken,#f0f0f0)] w-64 rounded" />
+        </div>
+        <div className="h-40 bg-[var(--surface-sunken,#f0f0f0)] rounded" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="h-36 bg-[var(--surface-sunken,#f0f0f0)] rounded" />
+          <div className="h-36 bg-[var(--surface-sunken,#f0f0f0)] rounded" />
+        </div>
       </div>
     );
   }
@@ -119,6 +128,9 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   }
 
   const isPending = order.order_status === 'PENDING_PAYMENT';
+  const address = typeof order.address_snapshot === 'string'
+    ? JSON.parse(order.address_snapshot)
+    : (order.address_snapshot || {});
 
   return (
     <div className="max-w-[900px] mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-8">
@@ -170,7 +182,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
               <div>
                 <span className="font-semibold text-sm text-[var(--ink)] block">{it.name_snapshot}</span>
                 <span className="text-[var(--ink-muted)]">
-                  {it.variant_label_snapshot} &bull; SKU: {it.sku_snapshot} &times; {it.qty}
+                  {it.variant_label_snapshot || 'Standard'} &bull; SKU: {it.sku_snapshot || 'N/A'} &times; {it.qty}
                 </span>
               </div>
               <span className="font-semibold tabular-nums text-sm">
@@ -186,19 +198,23 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
         {/* Address */}
         <div className="p-6 border border-[var(--line)] bg-[var(--surface)] rounded-[2px] space-y-2 text-xs">
           <h2 className="font-serif text-lg text-[var(--ink)] m-0 mb-3">Delivery Address</h2>
-          <p className="font-semibold text-sm m-0 text-[var(--ink)]">{order.address_snapshot.name}</p>
+          <p className="font-semibold text-sm m-0 text-[var(--ink)]">{address.name || 'Recipient'}</p>
           <p className="m-0 text-[var(--ink-muted)]">
-            {order.address_snapshot.line1}{order.address_snapshot.line2 ? `, ${order.address_snapshot.line2}` : ''}
-          </p>
-          <p className="m-0 text-[var(--ink-muted)]">
-            {order.address_snapshot.city}, {order.address_snapshot.state} - {order.address_snapshot.pincode}
+            {address.line1}{address.line2 ? `, ${address.line2}` : ''}
           </p>
           <p className="m-0 text-[var(--ink-muted)]">
-            Contact: {order.address_snapshot.phone}
+            {[address.city, address.state].filter(Boolean).join(', ')} {address.pincode ? `- ${address.pincode}` : ''}
           </p>
-          <p className="text-[11px] text-[var(--ink-muted)] m-0 pt-2 border-t border-[var(--line)]">
-            GPS Coordinates: {Number(order.address_snapshot.latitude).toFixed(4)}, {Number(order.address_snapshot.longitude).toFixed(4)}
-          </p>
+          {address.phone && (
+            <p className="m-0 text-[var(--ink-muted)]">
+              Contact: {address.phone}
+            </p>
+          )}
+          {address.latitude && address.longitude && (
+            <p className="text-[11px] text-[var(--ink-muted)] m-0 pt-2 border-t border-[var(--line)]">
+              GPS Coordinates: {Number(address.latitude).toFixed(4)}, {Number(address.longitude).toFixed(4)}
+            </p>
+          )}
         </div>
 
         {/* Totals */}

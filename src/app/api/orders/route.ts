@@ -297,6 +297,7 @@ export async function POST(req: NextRequest) {
           // Insert order items
           const orderItemsPayload = hydratedLines.map((it) => ({
             order_id: createdOrder.id,
+            product_id: it.productId,
             variant_id: it.variantId,
             name_snapshot: it.name_snapshot,
             variant_label_snapshot: it.variant_label_snapshot,
@@ -306,7 +307,10 @@ export async function POST(req: NextRequest) {
             unit_price_paise: it.unit_price_paise,
           }));
 
-          await supabase.from('order_items').insert(orderItemsPayload);
+          const { error: itemErr } = await supabase.from('order_items').insert(orderItemsPayload);
+          if (itemErr) {
+            console.error('Failed to insert order items into Supabase:', itemErr);
+          }
 
           return NextResponse.json({
             ok: true,

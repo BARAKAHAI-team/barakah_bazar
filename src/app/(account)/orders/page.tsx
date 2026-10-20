@@ -28,8 +28,11 @@ export default function OrdersPage() {
 
   if (loading) {
     return (
-      <div className="max-w-[1000px] mx-auto px-4 py-16 text-center text-xs text-[var(--ink-muted)]">
-        Loading orders...
+      <div className="max-w-[1000px] mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-4 animate-pulse">
+        <div className="h-4 bg-[var(--surface-sunken,#f0f0f0)] w-36 rounded" />
+        <div className="h-10 bg-[var(--surface-sunken,#f0f0f0)] w-60 rounded mb-8" />
+        <div className="h-28 bg-[var(--surface-sunken,#f0f0f0)] rounded" />
+        <div className="h-28 bg-[var(--surface-sunken,#f0f0f0)] rounded" />
       </div>
     );
   }
@@ -56,7 +59,7 @@ export default function OrdersPage() {
           {orders.map((ord) => (
             <div
               key={ord.id}
-              className="p-5 border border-[var(--line)] bg-[var(--surface)] rounded-[2px] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+              className="p-5 border border-[var(--line)] bg-[var(--surface)] rounded-[2px] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-[var(--ink)] transition-colors"
             >
               <div>
                 <div className="flex items-center gap-3 mb-1">
@@ -77,7 +80,7 @@ export default function OrdersPage() {
                 </span>
               </div>
 
-              <Link href={`/orders/${ord.id}`}>
+              <Link href={`/orders/${ord.id}`} prefetch={true}>
                 <Button variant="secondary" size="sm">
                   View Details &rarr;
                 </Button>

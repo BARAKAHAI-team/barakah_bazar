@@ -264,7 +264,18 @@ export default function CheckoutPage() {
         return;
       }
 
-      // Check if Razorpay script is ready or simulated test mode
+      // Ensure Razorpay script is loaded dynamically
+      if (typeof window !== 'undefined' && !(window as any).Razorpay) {
+        await new Promise<void>((resolve) => {
+          const script = document.createElement('script');
+          script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+          script.onload = () => resolve();
+          script.onerror = () => resolve();
+          document.body.appendChild(script);
+        });
+      }
+
+      // Open live Razorpay checkout modal
       if (typeof window !== 'undefined' && (window as any).Razorpay) {
         const rzp = new (window as any).Razorpay({
           key: payData.keyId,
@@ -274,7 +285,7 @@ export default function CheckoutPage() {
           description: `Order ${orderToPay.order_number}`,
           order_id: payData.razorpayOrderId,
           handler: async (response: any) => {
-            // Verify
+            // Verify HMAC signature
             const verifyRes = await fetch('/api/payments/verify', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -288,7 +299,8 @@ export default function CheckoutPage() {
             if (vData.ok) {
               router.push(`/checkout/success?order=${orderToPay.order_number}`);
             } else {
-              toast('Signature verification failed.', 'error');
+              toast(vData.error?.message || 'Signature verification failed.', 'error');
+              setSubmitting(false);
             }
           },
           prefill: {
@@ -296,32 +308,22 @@ export default function CheckoutPage() {
             email: orderToPay.notify_email || '',
           },
           theme: {
-            color: '#C89B3C',
+            color: '#B98725',
+          },
+          modal: {
+            ondismiss: () => {
+              setSubmitting(false);
+              toast('Payment window closed.', 'info');
+            },
           },
         });
         rzp.open();
       } else {
-        // Fallback for simulated test payment when script is not loaded
-        toast('Simulating payment confirmation...', 'info');
-        const verifyRes = await fetch('/api/payments/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            razorpay_order_id: payData.razorpayOrderId,
-            razorpay_payment_id: `pay_mock_${Date.now()}`,
-            razorpay_signature: 'mock_signature_for_dev_mode',
-          }),
-        });
-        const vData = await verifyRes.json();
-        if (vData.ok) {
-          router.push(`/checkout/success?order=${orderToPay.order_number}`);
-        } else {
-          toast(vData.error?.message || 'Payment processing failed', 'error');
-        }
+        toast('Failed to load payment gateway. Please refresh and try again.', 'error');
+        setSubmitting(false);
       }
     } catch (err: any) {
       toast(err.message || 'Payment error', 'error');
-    } finally {
       setSubmitting(false);
     }
   };
@@ -339,7 +341,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="max-w-[900px] mx-auto px-4 sm:px-6 py-6 sm:py-10">
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
       <Breadcrumbs items={[{ label: 'Cart', href: '/cart' }, { label: 'Checkout' }]} />
 
       <h1 className="font-serif text-3xl sm:text-4xl text-[var(--ink)] mt-4 mb-2">

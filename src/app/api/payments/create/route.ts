@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { memoryOrders } from '../../orders/route';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 const schema = z.object({
   orderId: z.string(),
@@ -39,8 +40,31 @@ export async function POST(req: NextRequest) {
     }
 
     const { orderId } = parsed.data;
-    const orders = memoryOrders.get(session.userId) || [];
-    const order = orders.find((o) => o.id === orderId);
+    let order: any = null;
+
+    // Check Supabase first
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      try {
+        const supabase = createAdminClient() as any;
+        const { data, error } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('id', orderId)
+          .single();
+
+        if (!error && data) {
+          order = data;
+        }
+      } catch (err) {
+        console.warn('Supabase order lookup in payment create error:', err);
+      }
+    }
+
+    // Fallback to memory
+    if (!order) {
+      const orders = memoryOrders.get(session.userId) || [];
+      order = orders.find((o) => o.id === orderId);
+    }
 
     if (!order) {
       return NextResponse.json(
