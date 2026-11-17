@@ -35,7 +35,7 @@ export default function LandingPage() {
             EVERYTHING<br />WITH <span className="italic text-[#b98725]">BARAKAH</span>
           </h1>
           <p className="max-w-[520px] text-[#625d53] text-[14px] sm:text-[16px] leading-[1.7] sm:leading-[1.8] font-normal my-0">
-            KERALA PURE &nbsp; &bull; &nbsp; BRIDAL COLLECTION &nbsp; &bull; &nbsp; BARAKAH NATURALS
+            KERALA PURE COCONUT OIL &nbsp; &bull; &nbsp; BRIDAL COLLECTION &nbsp; &bull; &nbsp; BARAKAH NATURALS
           </p>
           <div className="pt-2">
             <a
@@ -209,7 +209,7 @@ export default function LandingPage() {
             >
               <img src="/images/home/oil/image-5.jpeg" alt="Pure Coconut Oil 300ml" className="w-full h-[175px] object-cover bg-[#f7f3ea] group-hover:scale-[1.02] transition-transform" />
               <div className="p-[11px]">
-                <small className="text-[8px] text-[#887a61] uppercase tracking-wider block font-bold">KERALA PURE</small>
+                <small className="text-[8px] text-[#887a61] uppercase tracking-wider block font-bold">KERALA PURE COCONUT OIL</small>
                 <h4 className="font-serif font-semibold text-[13px] my-[5px] mb-[10px] min-h-[30px] line-clamp-2 text-[#16140f]">Pure Coconut Oil 300ml</h4>
                 <div className="font-black text-[#a87518] text-[14px]">₹149</div>
               </div>
@@ -222,7 +222,7 @@ export default function LandingPage() {
             >
               <img src="/images/home/oil/image-5.jpeg" alt="Pure Coconut Oil 500ml" className="w-full h-[175px] object-cover bg-[#f7f3ea] group-hover:scale-[1.02] transition-transform" />
               <div className="p-[11px]">
-                <small className="text-[8px] text-[#887a61] uppercase tracking-wider block font-bold">KERALA PURE</small>
+                <small className="text-[8px] text-[#887a61] uppercase tracking-wider block font-bold">KERALA PURE COCONUT OIL</small>
                 <h4 className="font-serif font-semibold text-[13px] my-[5px] mb-[10px] min-h-[30px] line-clamp-2 text-[#16140f]">Pure Coconut Oil 500ml</h4>
                 <div className="font-black text-[#a87518] text-[14px]">₹249</div>
               </div>

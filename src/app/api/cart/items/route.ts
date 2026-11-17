@@ -4,10 +4,16 @@ import { memoryCart } from '../route';
 import { SEED_PRODUCTS } from '@/lib/catalog/seed-data';
 import { createAdminClient } from '@/lib/supabase/admin';
 
-const addItemSchema = z.object({
-  variantId: z.string(),
-  qty: z.number().int().positive(),
-});
+const addItemSchema = z
+  .object({
+    variantId: z.string().optional(),
+    variant_id: z.string().optional(),
+    qty: z.number().int().positive().optional(),
+    quantity: z.number().int().positive().optional(),
+  })
+  .refine((data) => Boolean(data.variantId || data.variant_id), {
+    message: 'Valid variantId or variant_id required.',
+  });
 
 function getSessionUser(req: NextRequest) {
   const cookie = req.cookies.get('bz_session');
@@ -38,7 +44,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { variantId, qty } = parsed.data;
+    const variantId = (parsed.data.variantId || parsed.data.variant_id) as string;
+    const qty = parsed.data.qty ?? parsed.data.quantity ?? 1;
 
     // Check Supabase for variant stock and insert
     try {

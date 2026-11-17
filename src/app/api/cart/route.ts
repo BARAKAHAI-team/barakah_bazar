@@ -177,3 +177,7 @@ export async function GET(req: NextRequest) {
     canCheckout: !hasIssues && hydrated.length > 0,
   });
 }
+
+// Re-export POST so both /api/cart and /api/cart/items work reliably
+export { POST } from './items/route';
+

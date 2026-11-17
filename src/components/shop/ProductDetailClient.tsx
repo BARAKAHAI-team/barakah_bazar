@@ -134,10 +134,26 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
       });
 
       if (!res.ok) {
-        const err = await res.json();
-        toast(err.error?.message || 'Failed to add item to cart', 'error');
+        if (res.status === 401) {
+          sessionStorage.setItem(
+            'bz_pending_action',
+            JSON.stringify({
+              type: 'cart',
+              variantId: selectedVariant.id,
+              qty: quantity,
+            })
+          );
+          toast('Please log in to add items to your cart.', 'info');
+          window.location.href = `/login?next=/${product.category_slug}/${product.slug}`;
+          return;
+        }
+        const err = await res.json().catch(() => null);
+        toast(err?.error?.message || 'Failed to add item to cart', 'error');
       } else {
-        clientStore.setCartCount(clientStore.cartCount + quantity);
+        const data = await res.json().catch(() => null);
+        const total = typeof data?.totalItems === 'number' ? data.totalItems : clientStore.cartCount + quantity;
+        clientStore.setCartCount(total);
+        clientStore.setAuth(true);
         toast(`Added ${quantity} item(s) to your cart.`, 'success');
       }
     } catch {

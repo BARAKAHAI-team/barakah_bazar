@@ -132,37 +132,40 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, className }) 
       return;
     }
 
-    if (!clientStore.isLoggedIn) {
-      sessionStorage.setItem(
-        'bz_pending_action',
-        JSON.stringify({
-          type: 'cart',
-          productId: product.id,
-          variantId: targetVariant.id,
-          qty: 1,
-        })
-      );
-      toast('Please log in to add items to your cart.', 'info');
-      window.location.href = `/login?next=/${product.category_slug}/${product.slug}`;
-      return;
-    }
-
     setAddingQuick(true);
     try {
-      const res = await fetch('/api/cart', {
+      const res = await fetch('/api/cart/items', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          variantId: targetVariant.id,
           variant_id: targetVariant.id,
+          qty: 1,
           quantity: 1,
         }),
       });
 
       if (res.ok) {
-        clientStore.setCartCount(clientStore.cartCount + 1);
+        const data = await res.json().catch(() => null);
+        const total = typeof data?.totalItems === 'number' ? data.totalItems : clientStore.cartCount + 1;
+        clientStore.setCartCount(total);
+        clientStore.setAuth(true);
         toast(`Added to bag!`, 'success');
+      } else if (res.status === 401) {
+        sessionStorage.setItem(
+          'bz_pending_action',
+          JSON.stringify({
+            type: 'cart',
+            productId: product.id,
+            variantId: targetVariant.id,
+            qty: 1,
+          })
+        );
+        toast('Please log in to add items to your cart.', 'info');
+        window.location.href = `/login?next=/${product.category_slug}/${product.slug}`;
       } else {
-        toast('Could not add to cart', 'error');
+        const errData = await res.json().catch(() => null);
+        toast(errData?.error?.message || 'Could not add to cart', 'error');
       }
     } catch {
       toast('Network error while adding to cart', 'error');
@@ -177,12 +180,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, className }) 
   return (
     <div
       className={clsx(
-        'group flex flex-col relative bg-transparent border border-transparent hover:border-[var(--line)] rounded-[2px] p-2 transition-all duration-200 text-[var(--ink)]',
+        'group flex flex-col relative bg-white border border-stone-200/80 hover:border-stone-400 rounded-md p-2.5 sm:p-3 transition-all duration-200 text-[var(--ink)] shadow-xs hover:shadow-md',
         className
       )}
     >
       {/* Product Image Slot: Consistent ratio (3:4 bridal, 1:1 others) */}
-      <div className="relative overflow-hidden bg-[var(--surface-2)] rounded-[2px]">
+      <div className="relative overflow-hidden bg-[var(--surface-2)] rounded-[4px]">
         <Link
           href={`/${product.category_slug}/${product.slug}`}
           className="block relative overflow-hidden bg-[var(--surface-2)] no-underline"
@@ -225,12 +228,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, className }) 
           </div>
         </Link>
 
-        {/* Wishlist Button: plain heart icon top-right */}
+        {/* Wishlist Button: always visible top-right */}
         <button
           type="button"
           onClick={handleWishlistToggle}
           aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-          className="absolute top-2 right-2 p-1.5 bg-white/80 hover:bg-white backdrop-blur-sm rounded-full border border-stone-200/50 text-[var(--ink)] hover:text-[var(--accent-bridal)] transition-colors z-20 cursor-pointer shadow-sm"
+          title={isWishlisted ? 'In Wishlist' : 'Add to Wishlist'}
+          className="absolute top-2 right-2 p-1.5 sm:p-2 bg-white/90 hover:bg-white backdrop-blur-md rounded-full border border-stone-200/80 text-stone-700 hover:text-rose-600 transition-all z-20 cursor-pointer shadow-sm hover:scale-105 active:scale-95"
         >
           <Heart
             size={16}
@@ -238,88 +242,38 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, className }) 
             className={clsx(
               'transition-colors',
               isWishlisted
-                ? 'fill-[var(--accent-bridal)] text-[var(--accent-bridal)]'
+                ? 'fill-rose-500 text-rose-500'
                 : 'text-stone-600 hover:text-stone-900'
             )}
           />
         </button>
-
-        {/* Hover "Add to Bag / Cart" Action */}
-        {!isSoldOut ? (
-          <div className="hidden md:flex absolute inset-x-0 bottom-0 z-20 flex-col opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-200 shadow-lg pointer-events-auto">
-            {uniqueSizes.length > 1 ? (
-              <div className="bg-white/95 backdrop-blur-md border-t border-[var(--line)] p-2 flex flex-col gap-1.5">
-                <div className="flex items-center justify-between text-[10px] font-semibold text-[var(--ink-muted)] uppercase tracking-wider px-0.5">
-                  <span>Quick Add Size</span>
-                  {addingQuick && <span className="text-[var(--accent-bridal)]">Adding...</span>}
-                </div>
-                <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                  {uniqueSizes.map(({ size, variantId, inStock }) => (
-                    <button
-                      key={size}
-                      type="button"
-                      disabled={!inStock || addingQuick}
-                      onClick={(e) => handleAddToCart(e, variantId)}
-                      className={clsx(
-                        'min-w-[28px] h-7 px-1.5 text-[11px] font-bold rounded-[2px] transition-colors flex items-center justify-center cursor-pointer select-none',
-                        inStock
-                          ? 'bg-stone-100 hover:bg-stone-900 hover:text-white text-stone-900 border border-stone-300'
-                          : 'bg-stone-50 text-stone-300 border border-stone-200 cursor-not-allowed line-through'
-                      )}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="p-2 bg-gradient-to-t from-black/50 to-transparent">
-                <button
-                  type="button"
-                  disabled={addingQuick}
-                  onClick={(e) => handleAddToCart(e)}
-                  className="w-full py-2 px-3 bg-white hover:bg-stone-900 hover:text-white text-stone-900 border border-stone-200 shadow-md text-xs font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 rounded-[2px] cursor-pointer select-none"
-                >
-                  <ShoppingBag size={14} />
-                  {addingQuick ? 'Adding to bag...' : 'Add to Bag'}
-                </button>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="hidden md:block absolute inset-x-0 bottom-0 p-2 z-20 opacity-0 group-hover:opacity-100 transition-all duration-200">
-            <div className="w-full py-1.5 bg-stone-100/90 text-stone-500 border border-stone-200 text-xs font-semibold uppercase tracking-wider text-center rounded-[2px]">
-              Sold Out
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Product Information */}
-      <div className="pt-2 pb-1 flex flex-col flex-1">
-        {/* Brand / Sub-category Line: small muted 12px */}
+      <div className="pt-2.5 pb-1 flex flex-col flex-1">
+        {/* Brand / Sub-category Line */}
         <div className="flex items-center justify-between gap-1 mb-0.5">
           <span className="text-[12px] text-[var(--ink-muted)] font-normal line-clamp-1">
             {subCategoryOrBrand}
           </span>
           {isNew && (
-            <span className="text-[11px] font-medium text-[var(--ink)] uppercase tracking-wider">
+            <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200/60 px-1.5 py-0.2 rounded uppercase tracking-wider">
               New
             </span>
           )}
         </div>
 
-        {/* Product Name: 2 lines max, 14px, ink, truncated with ellipsis */}
+        {/* Product Name */}
         <Link
           href={`/${product.category_slug}/${product.slug}`}
           className="no-underline text-inherit group/title mb-1.5"
         >
-          <h3 className="font-sans text-[14px] font-normal text-[var(--ink)] m-0 line-clamp-2 leading-snug group-hover/title:underline">
+          <h3 className="font-sans text-[14px] font-medium text-[var(--ink)] m-0 line-clamp-2 leading-snug group-hover/title:underline">
             {product.name}
           </h3>
         </Link>
 
-        {/* Price Row: bold price, struck MRP, plain green discount (computed from compare_at_price) */}
+        {/* Price Row */}
         <div className="flex items-baseline flex-wrap gap-2 tabular-nums mb-1">
           <Price
             pricePaise={primaryVariant.price_paise}
@@ -329,7 +283,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, className }) 
           />
         </div>
 
-        {/* Rating Row ONLY if the product has at least one review: "4.3 ★ (28)" */}
+        {/* Rating Row */}
         {product.rating && product.rating.review_count > 0 && (
           <div className="flex items-center gap-1 text-[12px] text-[var(--ink)] font-medium tabular-nums mb-1">
             <span>{product.rating.avg_rating.toFixed(1)}</span>
@@ -344,17 +298,69 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, className }) 
           </div>
         )}
 
-        {/* Variant Hint Line: derived from product variants */}
+        {/* Variant Hint */}
         {variantHint && (
-          <div className="text-[11px] text-[var(--ink-muted)] mt-auto pt-0.5">
+          <div className="text-[11px] text-[var(--ink-muted)] mt-auto pt-0.5 mb-2">
             {variantHint}
           </div>
         )}
+      </div>
 
-        {isSoldOut && (
-          <div className="text-[11px] font-medium text-[var(--ink-muted)] mt-auto pt-0.5">
-            Sold out
+      {/* Always-visible Add to Bag Action Area */}
+      <div className="mt-auto pt-2 border-t border-stone-100 flex flex-col gap-1.5">
+        {isSoldOut ? (
+          <button
+            type="button"
+            disabled
+            className="w-full py-2 px-3 bg-stone-100 text-stone-400 border border-stone-200 text-xs font-semibold uppercase tracking-wider text-center rounded-[4px] cursor-not-allowed select-none"
+          >
+            Sold Out
+          </button>
+        ) : uniqueSizes.length > 1 ? (
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between text-[11px] font-medium text-stone-500 px-0.5">
+              <span>Quick Add Size:</span>
+              {addingQuick && <span className="text-amber-700 font-semibold animate-pulse">Adding...</span>}
+            </div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {uniqueSizes.map(({ size, variantId, inStock }) => (
+                <button
+                  key={size}
+                  type="button"
+                  disabled={!inStock || addingQuick}
+                  onClick={(e) => handleAddToCart(e, variantId)}
+                  className={clsx(
+                    'min-w-[30px] h-7 px-1.5 text-[11px] font-semibold rounded border transition-all flex items-center justify-center cursor-pointer select-none',
+                    inStock
+                      ? 'bg-stone-50 hover:bg-stone-900 hover:text-white text-stone-800 border-stone-300 active:scale-95'
+                      : 'bg-stone-50 text-stone-300 border-stone-200 cursor-not-allowed line-through'
+                  )}
+                  title={inStock ? `Add size ${size} to bag` : `${size} is sold out`}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              disabled={addingQuick}
+              onClick={(e) => handleAddToCart(e)}
+              className="w-full mt-0.5 py-1.5 px-3 bg-stone-900 hover:bg-stone-800 text-white text-[11px] font-semibold uppercase tracking-wider rounded-[4px] transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-[0.99] select-none"
+            >
+              <ShoppingBag size={13} />
+              {addingQuick ? 'Adding to bag...' : 'Add to Bag'}
+            </button>
           </div>
+        ) : (
+          <button
+            type="button"
+            disabled={addingQuick}
+            onClick={(e) => handleAddToCart(e)}
+            className="w-full py-2 px-3 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold uppercase tracking-wider rounded-[4px] transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-[0.99] disabled:opacity-75 select-none"
+          >
+            <ShoppingBag size={14} className={clsx(addingQuick && 'animate-spin')} />
+            {addingQuick ? 'Adding to bag...' : 'Add to Bag'}
+          </button>
         )}
       </div>
     </div>
