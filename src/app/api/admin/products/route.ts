@@ -5,7 +5,7 @@ import { z } from 'zod';
 const createProductSchema = z.object({
   name: z.string().min(2, 'Product name required'),
   slug: z.string().min(2, 'Slug required'),
-  category_slug: z.enum(['bridal', 'naturals', 'coconut-oil']),
+  category_slug: z.string().min(2, 'Category required'),
   badge: z.string().nullable().optional(),
   short_description: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
