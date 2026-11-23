@@ -32,7 +32,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en-IN" className={`${newsreader.variable} ${publicSans.variable}`}>
+    <html lang="en-IN" data-scroll-behavior="smooth" className={`${newsreader.variable} ${publicSans.variable}`}>
       <body className="min-h-screen flex flex-col bg-[var(--bg)] text-[var(--ink)]">
         <ToastProvider>
           <a

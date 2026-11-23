@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Package,
@@ -47,6 +47,22 @@ export function ProductEditorForm({ initialProduct, isEditing = false }: Product
   const [slug, setSlug] = useState(initialProduct?.slug || '');
   const [slugCustomized, setSlugCustomized] = useState(isEditing);
   const [categorySlug, setCategorySlug] = useState(initialProduct?.category_slug || 'bridal');
+  const [availableCategories, setAvailableCategories] = useState<Array<{ slug: string; name: string }>>([
+    { slug: 'bridal', name: 'Barakah Bridal Collections' },
+    { slug: 'naturals', name: 'Barakah Naturals' },
+    { slug: 'coconut-oil', name: 'Barakah Kerala Pure Coconut Oil' },
+  ]);
+
+  useEffect(() => {
+    fetch('/api/admin/categories')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.ok && Array.isArray(data.categories) && data.categories.length > 0) {
+          setAvailableCategories(data.categories);
+        }
+      })
+      .catch(() => {});
+  }, []);
   const [badge, setBadge] = useState(initialProduct?.badge || '');
   const [shortDescription, setShortDescription] = useState(initialProduct?.short_description || '');
   const [description, setDescription] = useState(initialProduct?.description || '');
@@ -468,12 +484,14 @@ export function ProductEditorForm({ initialProduct, isEditing = false }: Product
               </label>
               <select
                 value={categorySlug}
-                onChange={(e) => setCategorySlug(e.target.value as any)}
+                onChange={(e) => setCategorySlug(e.target.value)}
                 className="w-full px-3 py-2 border border-[#E8DCC2] rounded-md text-sm text-[#16140F] focus:outline-none focus:border-[#B98725] bg-[#FCFAF5]"
               >
-                <option value="bridal">Barakah Bridal Collections</option>
-                <option value="naturals">Barakah Naturals</option>
-                <option value="coconut-oil">Barakah Kerala Pure Coconut Oil</option>
+                {availableCategories.map((c) => (
+                  <option key={c.slug} value={c.slug}>
+                    {c.name}
+                  </option>
+                ))}
               </select>
             </div>
 

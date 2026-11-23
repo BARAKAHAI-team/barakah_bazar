@@ -73,29 +73,128 @@ async function fetchDbProducts(categorySlug?: string): Promise<CatalogProduct[] 
   return null;
 }
 
-export async function getCategoryBySlug(slug: string): Promise<CatalogCategory | null> {
-  const category = SEED_CATEGORIES[slug];
-  if (!category) return null;
+let serverCategoriesCache: CatalogCategory[] | null = null;
+let serverCategoriesCacheExpiresAt = 0;
+const CATEGORIES_CACHE_TTL_MS = 5 * 1000; // 5 seconds fresh server cache
 
+export function invalidateCategoriesCache(): void {
+  serverCategoriesCache = null;
+  serverCategoriesCacheExpiresAt = 0;
+}
+
+export async function getAllCategories(activeOnly = true): Promise<CatalogCategory[]> {
+  const now = Date.now();
+  if (serverCategoriesCache && now < serverCategoriesCacheExpiresAt) {
+    return activeOnly ? serverCategoriesCache.filter((c) => c.is_active !== false) : serverCategoriesCache;
+  }
+
+  const categoriesMap = new Map<string, CatalogCategory>();
+
+  // Add seed categories first
+  Object.values(SEED_CATEGORIES).forEach((cat, idx) => {
+    categoriesMap.set(cat.slug, {
+      ...cat,
+      sort_order: idx + 1,
+      is_active: true,
+      eyebrow:
+        cat.slug === 'bridal'
+          ? 'ROYAL ATTIRE & BESPOKE COUTURE'
+          : cat.slug === 'naturals'
+          ? 'BOTANICAL WELLNESS & SPICES'
+          : 'HERITAGE OIL',
+    });
+  });
+
+  // Query Supabase live categories
   try {
     if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
       const supabase = createPublicClient();
+      let query = supabase.from('categories').select('*').order('sort_order', { ascending: true });
+      if (activeOnly) {
+        query = query.eq('is_active', true);
+      }
+      const { data, error } = await query;
+      if (!error && data && data.length > 0) {
+        data.forEach((dbCat: any) => {
+          const existing = categoriesMap.get(dbCat.slug);
+          categoriesMap.set(dbCat.slug, {
+            id: dbCat.id,
+            slug: dbCat.slug,
+            name: dbCat.name,
+            tagline: dbCat.tagline,
+            description: dbCat.description,
+            accent: dbCat.accent || existing?.accent || '#B8892D',
+            eyebrow: dbCat.eyebrow || existing?.eyebrow || dbCat.name.toUpperCase(),
+            imageUrl: dbCat.image_url || existing?.imageUrl || null,
+            sort_order: dbCat.sort_order ?? 0,
+            is_active: dbCat.is_active !== undefined ? dbCat.is_active : true,
+            seo_title: dbCat.seo_title,
+            seo_description: dbCat.seo_description,
+          });
+        });
+      }
+    }
+  } catch (err) {
+    console.warn('Supabase categories fetch error in data.ts:', err);
+  }
+
+  // Also merge with inMemoryCategories from admin-store
+  try {
+    const { inMemoryCategories } = await import('./admin-store');
+    inMemoryCategories.forEach((cat) => {
+      if (!activeOnly || cat.is_active !== false) {
+        categoriesMap.set(cat.slug, { ...cat });
+      }
+    });
+  } catch {
+    // fallback
+  }
+
+  const list = Array.from(categoriesMap.values());
+  list.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+
+  serverCategoriesCache = list;
+  serverCategoriesCacheExpiresAt = Date.now() + CATEGORIES_CACHE_TTL_MS;
+
+  return activeOnly ? list.filter((c) => c.is_active !== false) : list;
+}
+
+export async function getCategoryBySlug(slug: string): Promise<CatalogCategory | null> {
+  // Query Supabase live first
+  try {
+    if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      const supabase = createPublicClient() as any;
       const { data, error } = await supabase
         .from('categories')
         .select('*')
-        .eq('slug', slug as 'bridal' | 'naturals' | 'coconut-oil')
+        .eq('slug', slug)
         .eq('is_active', true)
         .single();
 
-      if (data && !error) {
+      if (!error && data) {
+        const seedCat = SEED_CATEGORIES[slug];
+        const dbCat = data as any;
         return {
-          ...category,
-          id: data.id,
-          name: data.name,
-          tagline: data.tagline,
-          description: data.description,
-          seo_title: data.seo_title,
-          seo_description: data.seo_description,
+          id: dbCat.id,
+          slug: dbCat.slug,
+          name: dbCat.name,
+          tagline: dbCat.tagline,
+          description: dbCat.description,
+          accent: dbCat.accent || seedCat?.accent || '#B8892D',
+          eyebrow:
+            dbCat.eyebrow ||
+            (slug === 'bridal'
+              ? 'ROYAL ATTIRE & BESPOKE COUTURE'
+              : slug === 'naturals'
+              ? 'BOTANICAL WELLNESS & SPICES'
+              : slug === 'coconut-oil'
+              ? 'HERITAGE OIL'
+              : dbCat.name.toUpperCase()),
+          imageUrl: dbCat.image_url || seedCat?.imageUrl || null,
+          sort_order: dbCat.sort_order ?? 0,
+          is_active: dbCat.is_active,
+          seo_title: dbCat.seo_title,
+          seo_description: dbCat.seo_description,
         };
       }
     }
@@ -103,7 +202,19 @@ export async function getCategoryBySlug(slug: string): Promise<CatalogCategory |
     // fallback
   }
 
-  return category;
+  // Check inMemoryCategories
+  try {
+    const { inMemoryCategories } = await import('./admin-store');
+    const memoryCat = inMemoryCategories.find((c) => c.slug === slug);
+    if (memoryCat && memoryCat.is_active !== false) {
+      return memoryCat;
+    }
+  } catch {
+    // fallback
+  }
+
+  // Fallback to seed categories
+  return SEED_CATEGORIES[slug] || null;
 }
 
 export async function listCategoryProducts(params: FilterParams): Promise<{

@@ -9,6 +9,7 @@ import { CatalogProduct } from '@/lib/catalog/types';
 import { Price } from '@/components/ui/Price';
 import { useToast } from '@/components/ui/Toast';
 import { clientStore } from '@/lib/store';
+import { QuickAddModal, QuickAddProductData } from '@/components/shop/QuickAddModal';
 
 export interface ProductCardProps {
   product: CatalogProduct;
@@ -19,6 +20,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, className }) 
   const { toast } = useToast();
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [addingQuick, setAddingQuick] = useState(false);
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
 
   // Check if all variants are out of stock
   const isSoldOut = product.variants.every((v) => v.stock === 0);
@@ -177,13 +179,44 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, className }) 
   const subCategoryOrBrand =
     (product.attributes as Record<string, string>)?.sub_category || 'Barakah';
 
+  const handleBagClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (product.variants.length > 1) {
+      setIsQuickAddOpen(true);
+    } else {
+      handleAddToCart(e);
+    }
+  };
+
+  const quickAddData: QuickAddProductData = {
+    id: product.id,
+    name: product.name,
+    categorySlug: product.category_slug,
+    slug: product.slug,
+    image: primaryImage || '/placeholder.jpg',
+    pricePaise: primaryVariant.price_paise,
+    compareAtPricePaise: primaryVariant.compare_at_price_paise,
+    variants: product.variants.map((v) => ({
+      id: v.id,
+      size: v.option_values?.['Size'] || v.option_values?.['size'] || null,
+      color: v.option_values?.['Colour'] || v.option_values?.['Color'] || v.option_values?.['colour'] || null,
+      packSize: v.option_values?.['Pack size'] || v.option_values?.['Pack Size'] || null,
+      label: v.label,
+      pricePaise: v.price_paise,
+      compareAtPricePaise: v.compare_at_price_paise,
+      stock: v.stock,
+    })),
+  };
+
   return (
-    <div
-      className={clsx(
-        'group flex flex-col relative bg-white border border-stone-200/80 hover:border-stone-400 rounded-md p-2.5 sm:p-3 transition-all duration-200 text-[var(--ink)] shadow-xs hover:shadow-md',
-        className
-      )}
-    >
+    <>
+      <div
+        className={clsx(
+          'group flex flex-col relative bg-white border border-stone-200/80 hover:border-stone-400 rounded-md p-2.5 sm:p-3 transition-all duration-200 text-[var(--ink)] shadow-xs hover:shadow-md',
+          className
+        )}
+      >
       {/* Product Image Slot: Consistent ratio (3:4 bridal, 1:1 others) */}
       <div className="relative overflow-hidden bg-[var(--surface-2)] rounded-[4px]">
         <Link
@@ -312,51 +345,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, className }) 
           <button
             type="button"
             disabled
-            className="w-full py-2 px-3 bg-stone-100 text-stone-400 border border-stone-200 text-xs font-semibold uppercase tracking-wider text-center rounded-[4px] cursor-not-allowed select-none"
+            className="w-full py-2.5 px-3 bg-stone-100 text-stone-400 border border-stone-200 text-xs font-semibold uppercase tracking-wider text-center rounded-[4px] cursor-not-allowed select-none"
           >
             Sold Out
           </button>
-        ) : uniqueSizes.length > 1 ? (
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between text-[11px] font-medium text-stone-500 px-0.5">
-              <span>Quick Add Size:</span>
-              {addingQuick && <span className="text-amber-700 font-semibold animate-pulse">Adding...</span>}
-            </div>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              {uniqueSizes.map(({ size, variantId, inStock }) => (
-                <button
-                  key={size}
-                  type="button"
-                  disabled={!inStock || addingQuick}
-                  onClick={(e) => handleAddToCart(e, variantId)}
-                  className={clsx(
-                    'min-w-[30px] h-7 px-1.5 text-[11px] font-semibold rounded border transition-all flex items-center justify-center cursor-pointer select-none',
-                    inStock
-                      ? 'bg-stone-50 hover:bg-stone-900 hover:text-white text-stone-800 border-stone-300 active:scale-95'
-                      : 'bg-stone-50 text-stone-300 border-stone-200 cursor-not-allowed line-through'
-                  )}
-                  title={inStock ? `Add size ${size} to bag` : `${size} is sold out`}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
-            <button
-              type="button"
-              disabled={addingQuick}
-              onClick={(e) => handleAddToCart(e)}
-              className="w-full mt-0.5 py-1.5 px-3 bg-stone-900 hover:bg-stone-800 text-white text-[11px] font-semibold uppercase tracking-wider rounded-[4px] transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-[0.99] select-none"
-            >
-              <ShoppingBag size={13} />
-              {addingQuick ? 'Adding to bag...' : 'Add to Bag'}
-            </button>
-          </div>
         ) : (
           <button
             type="button"
             disabled={addingQuick}
-            onClick={(e) => handleAddToCart(e)}
-            className="w-full py-2 px-3 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold uppercase tracking-wider rounded-[4px] transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-[0.99] disabled:opacity-75 select-none"
+            onClick={handleBagClick}
+            className="w-full py-2.5 px-3 bg-[#1A1A17] hover:bg-[#B8892D] text-white text-xs font-semibold uppercase tracking-wider rounded-[4px] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-[0.99] disabled:opacity-75 select-none"
           >
             <ShoppingBag size={14} className={clsx(addingQuick && 'animate-spin')} />
             {addingQuick ? 'Adding to bag...' : 'Add to Bag'}
@@ -364,5 +362,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, className }) 
         )}
       </div>
     </div>
+
+    {/* Quick-Add Option Selector Modal */}
+    <QuickAddModal
+      isOpen={isQuickAddOpen}
+      onClose={() => setIsQuickAddOpen(false)}
+      product={quickAddData}
+    />
+  </>
   );
 };

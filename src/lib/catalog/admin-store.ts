@@ -1,9 +1,245 @@
-import { SEED_PRODUCTS } from './seed-data';
-import { CatalogProduct } from './types';
+import { SEED_PRODUCTS, SEED_CATEGORIES } from './seed-data';
+import { CatalogProduct, CatalogCategory } from './types';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 // In-memory products store populated from seed data
 let inMemoryProducts: CatalogProduct[] = [...SEED_PRODUCTS];
+
+// In-memory categories store populated from initial categories
+export let inMemoryCategories: (CatalogCategory & { productCount?: number })[] = [
+  {
+    id: '11111111-1111-1111-1111-111111111111',
+    slug: 'bridal',
+    name: 'Barakah Bridal Collections',
+    tagline: 'Curated bridal couture, festive lehengas & embroidered suits',
+    description: 'Exquisite bridal and festive ensembles crafted with intricate zari needlework, tilla embroidery, and rich royal silks.',
+    accent: '#7A1A28',
+    eyebrow: 'ROYAL ATTIRE & BESPOKE COUTURE',
+    imageUrl: '/images/home/products/bridal_suit_a.jpg',
+    sort_order: 1,
+    is_active: true,
+    seo_title: 'Barakah Bridal Collections | Royal Indian Festive & Wedding Wear',
+    seo_description: 'Explore Barakah Bridal Collections: handcrafted bridal lehengas, festive suits, and heirloom wedding ensembles.',
+  },
+  {
+    id: '22222222-2222-2222-2222-222222222222',
+    slug: 'naturals',
+    name: 'Barakah Naturals',
+    tagline: 'Artisanal scented candles & single-origin natural spices',
+    description: 'Handcrafted luxury soy candles, bespoke aromatic gifts, and organic spices sourced directly from agricultural growers.',
+    accent: '#5B1730',
+    eyebrow: 'BOTANICAL WELLNESS & SPICES',
+    imageUrl: '/images/home/products/candle_rose_a.jpg',
+    sort_order: 2,
+    is_active: true,
+    seo_title: 'Barakah Naturals | Luxury Scented Candles & Organic Spices',
+    seo_description: 'Discover Barakah Naturals: artisanal soy wax candles, festive candle gift hampers, and single-origin Kerala spices.',
+  },
+  {
+    id: '33333333-3333-3333-3333-333333333333',
+    slug: 'coconut-oil',
+    name: 'Barakah Kerala Pure Coconut Oil',
+    tagline: '100% pure & natural traditional cold-pressed Kerala coconut oil',
+    description: 'Pure, unrefined coconut oil extracted from handpicked sun-dried Kerala copra for culinary, hair, and holistic wellness.',
+    accent: '#8A641A',
+    eyebrow: 'HERITAGE OIL',
+    imageUrl: '/images/home/products/oil_500ml_a.jpg',
+    sort_order: 3,
+    is_active: true,
+    seo_title: 'Kerala Pure Coconut Oil | 100% Pure, Cold-Pressed & Unrefined',
+    seo_description: 'Traditional Kerala coconut oil, cold-pressed and pure in convenient 300ml, 500ml, and 1 Litre packs.',
+  },
+];
+
+export async function getAllAdminCategories() {
+  let categoriesMap = new Map<string, CatalogCategory>();
+
+  // Initialize with inMemoryCategories
+  inMemoryCategories.forEach((cat) => {
+    categoriesMap.set(cat.slug, { ...cat });
+  });
+
+  // Fetch from Supabase if available
+  try {
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      const supabase = createAdminClient() as any;
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('sort_order', { ascending: true });
+
+      if (!error && data && data.length > 0) {
+        data.forEach((dbCat: any) => {
+          const existing = categoriesMap.get(dbCat.slug);
+          categoriesMap.set(dbCat.slug, {
+            id: dbCat.id,
+            slug: dbCat.slug,
+            name: dbCat.name,
+            tagline: dbCat.tagline,
+            description: dbCat.description,
+            accent: dbCat.accent || existing?.accent || '#B8892D',
+            eyebrow: dbCat.eyebrow || existing?.eyebrow || dbCat.name.toUpperCase(),
+            imageUrl: dbCat.image_url || existing?.imageUrl || null,
+            sort_order: dbCat.sort_order ?? 0,
+            is_active: dbCat.is_active !== undefined ? dbCat.is_active : true,
+            seo_title: dbCat.seo_title,
+            seo_description: dbCat.seo_description,
+          });
+        });
+      }
+    }
+  } catch (err) {
+    console.warn('Supabase categories fetch error:', err);
+  }
+
+  // Calculate product counts
+  const allProducts = await getAllAdminProducts();
+  const result = Array.from(categoriesMap.values()).map((cat) => {
+    const count = allProducts.filter(
+      (p: CatalogProduct) => p.category_slug === cat.slug || p.category_id === cat.id
+    ).length;
+    return {
+      ...cat,
+      productCount: count,
+    };
+  });
+
+  result.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+  return result;
+}
+
+export async function getAdminCategoryById(idOrSlug: string): Promise<CatalogCategory | null> {
+  const all = await getAllAdminCategories();
+  return all.find((c) => c.id === idOrSlug || c.slug === idOrSlug) || null;
+}
+
+export async function createAdminCategory(data: any): Promise<CatalogCategory> {
+  const slug = (data.slug || data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')).replace(/(^-|-$)/g, '');
+  const id = data.id && data.id.length === 36 ? data.id : crypto.randomUUID();
+
+  const newCat: CatalogCategory = {
+    id,
+    slug,
+    name: data.name,
+    tagline: data.tagline || null,
+    description: data.description || null,
+    accent: data.accent || '#B8892D',
+    eyebrow: data.eyebrow || data.name.toUpperCase(),
+    imageUrl: data.imageUrl || data.image_url || null,
+    sort_order: data.sort_order !== undefined ? Number(data.sort_order) : inMemoryCategories.length + 1,
+    is_active: data.is_active !== undefined ? !!data.is_active : true,
+    seo_title: data.seo_title || `${data.name} | BarakahBazar`,
+    seo_description: data.seo_description || data.description || '',
+  };
+
+  // Update in memory
+  const existingIdx = inMemoryCategories.findIndex((c) => c.slug === slug || c.id === id);
+  if (existingIdx >= 0) {
+    inMemoryCategories[existingIdx] = newCat;
+  } else {
+    inMemoryCategories.push(newCat);
+  }
+
+  // Update in Supabase
+  try {
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      const supabase = createAdminClient() as any;
+      const { error } = await supabase.from('categories').insert({
+        id: newCat.id,
+        slug: newCat.slug,
+        name: newCat.name,
+        tagline: newCat.tagline,
+        description: newCat.description,
+        sort_order: newCat.sort_order,
+        is_active: newCat.is_active,
+        seo_title: newCat.seo_title,
+        seo_description: newCat.seo_description,
+        image_url: newCat.imageUrl || null,
+        accent: newCat.accent || '#B8892D',
+        eyebrow: newCat.eyebrow || null,
+      });
+
+      if (error) {
+        console.warn('Supabase category insert warning (check constraint or column):', error.message);
+      }
+    }
+  } catch (err) {
+    console.warn('Supabase category insert error:', err);
+  }
+
+  return newCat;
+}
+
+export async function updateAdminCategory(idOrSlug: string, updateData: any): Promise<CatalogCategory | null> {
+  const current = inMemoryCategories.find((c) => c.id === idOrSlug || c.slug === idOrSlug);
+  const updated: CatalogCategory = {
+    ...(current || {
+      id: crypto.randomUUID(),
+      slug: idOrSlug,
+      name: updateData.name || idOrSlug,
+      accent: '#B8892D',
+      tagline: null,
+      description: null,
+    }),
+    ...updateData,
+    id: current?.id || updateData.id || idOrSlug,
+    slug: updateData.slug || current?.slug || idOrSlug,
+  };
+
+  const idx = inMemoryCategories.findIndex((c) => c.id === idOrSlug || c.slug === idOrSlug);
+  if (idx >= 0) {
+    inMemoryCategories[idx] = updated;
+  } else {
+    inMemoryCategories.push(updated);
+  }
+
+  try {
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      const supabase = createAdminClient() as any;
+      await supabase
+        .from('categories')
+        .update({
+          name: updated.name,
+          slug: updated.slug,
+          tagline: updated.tagline,
+          description: updated.description,
+          sort_order: updated.sort_order,
+          is_active: updated.is_active,
+          seo_title: updated.seo_title,
+          seo_description: updated.seo_description,
+          image_url: updated.imageUrl || null,
+          accent: updated.accent || '#B8892D',
+          eyebrow: updated.eyebrow || null,
+        })
+        .or(`id.eq.${updated.id},slug.eq.${idOrSlug}`);
+    }
+  } catch (err) {
+    console.warn('Supabase category update error:', err);
+  }
+
+  return updated;
+}
+
+export async function deleteAdminCategory(idOrSlug: string): Promise<boolean> {
+  const idx = inMemoryCategories.findIndex((c) => c.id === idOrSlug || c.slug === idOrSlug);
+  if (idx >= 0) {
+    inMemoryCategories.splice(idx, 1);
+  }
+
+  try {
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      const supabase = createAdminClient() as any;
+      await supabase
+        .from('categories')
+        .delete()
+        .or(`id.eq.${idOrSlug},slug.eq.${idOrSlug}`);
+    }
+  } catch (err) {
+    console.warn('Supabase category delete error:', err);
+  }
+
+  return true;
+}
 
 export async function getAllAdminProducts(search?: string, categorySlug?: string) {
   // If Supabase is configured, fetch from database
@@ -136,8 +372,12 @@ export async function createAdminProduct(productData: any): Promise<CatalogProdu
       ? productData.id
       : crypto.randomUUID();
 
+  const foundCat = inMemoryCategories.find(
+    (c) => c.slug === productData.category_slug || c.id === productData.category_id
+  );
   const categoryId =
     productData.category_id ||
+    foundCat?.id ||
     CATEGORY_MAP[productData.category_slug] ||
     CATEGORY_MAP['bridal'];
 

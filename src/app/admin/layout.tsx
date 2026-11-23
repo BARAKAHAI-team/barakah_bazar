@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   Package,
+  Layers,
   Megaphone,
   ShoppingBag,
   Users,
@@ -15,10 +16,13 @@ import {
   X,
   ShieldCheck,
   LogOut,
+  Sparkles,
 } from 'lucide-react';
 
 const ADMIN_NAV = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/admin/hero', label: 'Storefront Hero', icon: Sparkles },
+  { href: '/admin/categories', label: 'Categories & Collections', icon: Layers },
   { href: '/admin/products', label: 'Products & Catalog', icon: Package },
   { href: '/admin/orders', label: 'Orders & Fulfillment', icon: ShoppingBag },
   { href: '/admin/users', label: 'Customers & Users', icon: Users },

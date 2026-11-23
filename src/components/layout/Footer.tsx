@@ -3,8 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { IndianMotifDivider } from '@/components/ui/IndianMotifDivider';
-import { SITE_CONFIG } from '@/lib/config/site';
+import { ShieldCheck, MessageCircle, ArrowUpRight } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   const pathname = usePathname();
@@ -13,82 +12,92 @@ export const Footer: React.FC = () => {
   }
 
   return (
-    <footer className="bg-[#1D1911] text-[#CFC7B7] pt-12 pb-8 mt-16 text-xs border-t-2 border-[#C89B3C]">
+    <footer className="bg-[#F6F2E9] text-[#2C2419] pt-14 pb-10 mt-20 text-xs border-t-2 border-[#B8892D]">
       {/* Main 4-Column Grid */}
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-10">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12">
         {/* Brand Column (Span 4) */}
-        <div className="md:col-span-4 space-y-3">
-          <Link href="/" className="inline-block no-underline">
-            <span className="font-serif text-2xl sm:text-3xl font-bold text-[#E3C476] tracking-tight block">
-              Barakah Bazaar
-            </span>
-            <small className="block font-sans text-[8px] sm:text-[9px] font-bold tracking-[0.24em] text-[#BDB3A0] uppercase mt-1">
-              GOODNESS &bull; ELEGANCE &bull; BLESSINGS
-            </small>
+        <div className="md:col-span-4 space-y-4">
+          <Link href="/" className="inline-block no-underline group select-none">
+            <img
+              src="/new-logo.png"
+              alt="Barakah Bazaar"
+              className="h-20 sm:h-24 w-auto object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-xs"
+            />
           </Link>
 
-          <p className="text-xs text-[#BDB3A0] leading-relaxed max-w-sm m-0">
-            One elegant marketplace for pure cold-pressed Kerala coconut oil, royal bespoke bridal lehengas, and handcrafted natural aromatherapy candles.
+          <p className="text-[13px] text-[#524736] leading-relaxed max-w-sm m-0 font-normal">
+            A luxury sanctuary for 100% pure Kerala cold-pressed coconut oil, regal bespoke bridal couture, and botanical hand-poured soy candles.
           </p>
 
-          <div className="pt-2 flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#2C261B] border border-[#423A2B] rounded-xs text-[11px] text-[#E3C476] font-medium">
-              <span>Verified Pan-India Dispatch</span>
+          {/* Core Pillars: Pure • Halal • Trusted */}
+          <div className="pt-1 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-[#D8CCB5] rounded-md text-[11px] text-[#8C6418] font-semibold tracking-wide shadow-2xs">
+              <span>Pure</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-[#D8CCB5] rounded-md text-[11px] text-[#8C6418] font-semibold tracking-wide shadow-2xs">
+              <span>Halal</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-[#D8CCB5] rounded-md text-[11px] text-[#8C6418] font-semibold tracking-wide shadow-2xs">
+              <span>Trusted</span>
             </span>
           </div>
         </div>
 
-        {/* Column 2: Collections (Span 3) */}
-        <div className="md:col-span-3 space-y-3">
-          <h4 className="font-serif text-base sm:text-lg font-bold text-[#E3C476] m-0">
-            Collections
+        {/* Column 2: Signature Collections (Span 3) */}
+        <div className="md:col-span-3 space-y-3.5">
+          <h4 className="font-serif text-[16px] font-bold text-[#1A1A17] tracking-wide m-0">
+            Signature Collections
           </h4>
-          <ul className="list-none p-0 m-0 space-y-2 text-xs">
+          <ul className="list-none p-0 m-0 space-y-2.5 text-[13px]">
             <li>
               <Link
                 href="/coconut-oil"
-                className="text-[#CFC7B7] hover:text-[#E3C476] transition-colors no-underline"
+                className="text-[#4D4233] hover:text-[#B8892D] transition-colors no-underline flex items-center justify-between group/link py-0.5"
               >
-                Kerala Pure Coconut Oil
+                <span>Kerala Pure Coconut Oil</span>
+                <ArrowUpRight size={14} className="text-[#968974] group-hover/link:text-[#B8892D] transition-colors" />
               </Link>
             </li>
             <li>
               <Link
                 href="/bridal"
-                className="text-[#CFC7B7] hover:text-[#E3C476] transition-colors no-underline"
+                className="text-[#4D4233] hover:text-[#B8892D] transition-colors no-underline flex items-center justify-between group/link py-0.5"
               >
-                Barakah Bridal Collections
+                <span>Bridal Collections</span>
+                <ArrowUpRight size={14} className="text-[#968974] group-hover/link:text-[#B8892D] transition-colors" />
               </Link>
             </li>
             <li>
               <Link
                 href="/naturals"
-                className="text-[#CFC7B7] hover:text-[#E3C476] transition-colors no-underline"
+                className="text-[#4D4233] hover:text-[#B8892D] transition-colors no-underline flex items-center justify-between group/link py-0.5"
               >
-                Barakah Naturals Candles
+                <span>Naturals</span>
+                <ArrowUpRight size={14} className="text-[#968974] group-hover/link:text-[#B8892D] transition-colors" />
               </Link>
             </li>
             <li>
               <Link
-                href="/#philosophy"
-                className="text-[#CFC7B7] hover:text-[#E3C476] transition-colors no-underline"
+                href="/#why-barakah"
+                className="text-[#4D4233] hover:text-[#B8892D] transition-colors no-underline flex items-center justify-between group/link py-0.5"
               >
-                Our Heritage &amp; Story
+                <span>Why BarakahBazar</span>
+                <ArrowUpRight size={14} className="text-[#968974] group-hover/link:text-[#B8892D] transition-colors" />
               </Link>
             </li>
           </ul>
         </div>
 
         {/* Column 3: Customer Care (Span 2) */}
-        <div className="md:col-span-2 space-y-3">
-          <h4 className="font-serif text-base sm:text-lg font-bold text-[#E3C476] m-0">
+        <div className="md:col-span-2 space-y-3.5">
+          <h4 className="font-serif text-[16px] font-bold text-[#1A1A17] tracking-wide m-0">
             Customer Care
           </h4>
-          <ul className="list-none p-0 m-0 space-y-2 text-xs">
+          <ul className="list-none p-0 m-0 space-y-2.5 text-[13px]">
             <li>
               <Link
                 href="/orders"
-                className="text-[#CFC7B7] hover:text-[#E3C476] transition-colors no-underline"
+                className="text-[#4D4233] hover:text-[#B8892D] transition-colors no-underline block py-0.5"
               >
                 Track My Order
               </Link>
@@ -96,7 +105,7 @@ export const Footer: React.FC = () => {
             <li>
               <Link
                 href="/policies/returns"
-                className="text-[#CFC7B7] hover:text-[#E3C476] transition-colors no-underline"
+                className="text-[#4D4233] hover:text-[#B8892D] transition-colors no-underline block py-0.5"
               >
                 Shipping &amp; Delivery
               </Link>
@@ -104,52 +113,54 @@ export const Footer: React.FC = () => {
             <li>
               <Link
                 href="/policies/returns"
-                className="text-[#CFC7B7] hover:text-[#E3C476] transition-colors no-underline"
+                className="text-[#4D4233] hover:text-[#B8892D] transition-colors no-underline block py-0.5"
               >
-                Returns &amp; Policies
+                Returns &amp; Exchange
               </Link>
             </li>
             <li>
               <Link
                 href="/policies/privacy"
-                className="text-[#CFC7B7] hover:text-[#E3C476] transition-colors no-underline"
+                className="text-[#4D4233] hover:text-[#B8892D] transition-colors no-underline block py-0.5"
               >
-                Privacy Policy
+                Privacy &amp; Security
               </Link>
             </li>
           </ul>
         </div>
 
-        {/* Column 4: Connect & Support (Span 3) */}
-        <div className="md:col-span-3 space-y-3">
-          <h4 className="font-serif text-base sm:text-lg font-bold text-[#E3C476] m-0">
-            Connect
+        {/* Column 4: Dedicated Concierge (Span 3) */}
+        <div className="md:col-span-3 space-y-3.5">
+          <h4 className="font-serif text-[16px] font-bold text-[#1A1A17] tracking-wide m-0">
+            Direct Concierge
           </h4>
-          <p className="text-xs text-[#BDB3A0] leading-relaxed m-0">
-            Dedicated customer concierge available for styling guidance, orders, and inquiries.
+          <p className="text-[13px] text-[#524736] leading-relaxed m-0 font-normal">
+            Personal guidance for bespoke bridal consultation, bulk cold-pressed oil, or order inquiries.
           </p>
 
-          <div className="pt-1 space-y-1.5">
+          <div className="pt-1.5 space-y-2">
             <a
               href="https://wa.me/918951789665"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-[#E3C476] hover:text-white font-medium text-xs no-underline transition-colors"
+              className="inline-flex items-center gap-2.5 px-3.5 py-2 bg-white border border-[#D8CCB5] hover:border-[#25D366] text-[#1A1A17] hover:text-[#15803D] hover:bg-[#F2FBF5] rounded-md text-[12.5px] font-medium transition-all shadow-2xs"
             >
+              <MessageCircle size={16} className="text-[#25D366]" />
               <span>WhatsApp: +91 8951789665</span>
             </a>
-            <p className="text-[11px] text-[#8F8778] m-0">
-              Hours: 10:00 AM &ndash; 8:00 PM IST
+            <p className="text-[11.5px] text-[#786C58] m-0">
+              Assistance Hours: 10:00 AM &ndash; 8:00 PM IST
             </p>
           </div>
         </div>
       </div>
 
-      {/* Verified Payment & Copyright Row */}
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 pt-6 mt-8 border-t border-[#423A2B] flex flex-col sm:flex-row justify-between items-center gap-4 text-[11px] text-[#9D9587]">
-        <p className="m-0 text-center sm:text-left">
-          Secure Payments via UPI, Cards, NetBanking &bull; 100% Genuine Provenance
-        </p>
+      {/* Verified Pan-India Dispatch & Security Row */}
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-7 mt-10 border-t border-[#DFD3BD] flex flex-col sm:flex-row justify-between items-center gap-4 text-[12px] text-[#6B5E4A]">
+        <div className="flex items-center gap-2 text-center sm:text-left">
+          <ShieldCheck size={15} className="text-[#B8892D] shrink-0" />
+          <span>Encrypted Checkout &bull; Verified Pan-India Express Delivery &bull; 100% Genuine Provenance</span>
+        </div>
         <p className="m-0 text-center sm:text-right">
           &copy; {new Date().getFullYear()} BarakahBazaar. All rights reserved.
         </p>

@@ -55,7 +55,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             name="q"
             defaultValue={query}
             placeholder="Search products"
-            className="w-full h-11 pl-10 pr-24 text-xs bg-[var(--surface)] text-[var(--ink)] border border-[var(--line)] rounded-[2px] outline-hidden focus:border-[var(--ink)]"
+            className="w-full h-11 pl-10 pr-24 text-xs bg-[var(--surface)] text-[var(--ink)] border border-[var(--line)] rounded-[2px] outline-hidden focus:border-[var(--ink)] [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
           />
           <Search size={16} strokeWidth={1.5} className="absolute left-3.5 top-3 text-[var(--ink-muted)]" />
           <button

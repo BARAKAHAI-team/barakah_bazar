@@ -1,11 +1,14 @@
 export interface CatalogCategory {
   id: string;
-  slug: 'bridal' | 'naturals' | 'coconut-oil';
+  slug: string;
   name: string;
   tagline: string | null;
   description: string | null;
   accent: string;
+  eyebrow?: string | null;
   imageUrl?: string | null;
+  sort_order?: number;
+  is_active?: boolean;
   seo_title?: string | null;
   seo_description?: string | null;
 }
@@ -38,7 +41,7 @@ export interface CatalogImage {
 export interface CatalogProduct {
   id: string;
   category_id: string;
-  category_slug: 'bridal' | 'naturals' | 'coconut-oil';
+  category_slug: string;
   slug: string;
   name: string;
   short_description: string | null;

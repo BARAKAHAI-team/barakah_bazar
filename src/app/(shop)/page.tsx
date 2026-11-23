@@ -1,5 +1,15 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import clsx from 'clsx';
+import { getAllCategories } from '@/lib/catalog/data';
+import { cleanCategoryName } from '@/lib/catalog/utils';
+import { getHeroSettings } from '@/lib/hero/hero-store';
+import { OneShoppingJourneySection } from '@/components/shop/OneShoppingJourneySection';
+import { FeaturedProductsSection } from '@/components/shop/FeaturedProductsSection';
+import { WhyBarakahSection } from '@/components/shop/WhyBarakahSection';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: 'BarakahBazaar — A More Blessed Tomorrow',
@@ -7,339 +17,208 @@ export const metadata: Metadata = {
     'BarakahBazaar — Kerala Pure Coconut Oil, Bridal Collection and Barakah Naturals in one elegant marketplace.',
 };
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const [categories, hero] = await Promise.all([
+    getAllCategories(true),
+    getHeroSettings(),
+  ]);
+
+  // Dynamic responsive grid scaling matching user rules:
+  // - 1 category: single centered card
+  // - 2 categories: 2 columns
+  // - 3 categories: 3 columns (1 row of 3)
+  // - 4 categories: 4 columns (1 row of 4)
+  // - 6 categories: 3 columns (2 rows of 3)
+  // - 5, 7+ categories: max 4 columns (lg:grid-cols-4 or lg:grid-cols-3)
+  const gridColsClass =
+    categories.length === 1
+      ? 'grid-cols-1 max-w-md mx-auto'
+      : categories.length === 2
+      ? 'grid-cols-1 sm:grid-cols-2 max-w-3xl mx-auto'
+      : categories.length === 4
+      ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+      : categories.length === 6
+      ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+      : categories.length >= 7
+      ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+      : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3';
   return (
-    <div className="bg-[#fffdf9] text-[#211e18] overflow-x-hidden">
-      {/* 1. HERO SECTION: Full-bleed user_collection_hero.jpg artwork with smooth horizontal gradient */}
-      <section id="home" className="relative min-h-[625px] flex items-center overflow-hidden bg-[#fbf7ee]">
-        {/* Full-bleed hero artwork */}
+    <div className="bg-white text-[#211e18] overflow-x-hidden">
+      {/* 1. HERO SECTION: Clean Pure White Luxury Editorial Split Hero */}
+      <section id="home" className="relative min-h-[600px] lg:min-h-[660px] flex items-center overflow-hidden bg-white border-b border-[#eee5d4]/60">
+        <div className="relative w-[min(1240px,92%)] mx-auto py-12 sm:py-16 lg:py-20 z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            
+            {/* Left Column: Narrative, Typography & Actions */}
+            <div className="lg:col-span-7 flex flex-col items-start text-left">
+              {/* Authentic Tagline Eyebrow */}
+              {hero.eyebrow && (
+                <span className="text-[11px] font-bold tracking-[3px] text-[#b98725] uppercase mb-3 block animate-fade-in-up">
+                  {hero.eyebrow}
+                </span>
+              )}
+
+              {/* Main Headline */}
+              <h1 className="font-serif text-[clamp(40px,5.5vw,76px)] leading-[1.02] text-[#2c2214] font-semibold tracking-tight mb-5 animate-fade-in-up delay-100">
+                {hero.headlineMain}
+                <br />
+                {hero.headlinePrefix ? `${hero.headlinePrefix} ` : ''}
+                <span className="italic font-normal text-[#b98725]">{hero.headlineAccent}</span>
+              </h1>
+
+              {/* Dynamic Categories Banner (Toggleable) */}
+              {hero.showCategoryPills !== false && (
+                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] sm:text-[12px] font-bold tracking-[1.5px] uppercase text-[#756b58] mb-5 animate-fade-in-up delay-200">
+                  {categories.map((c, idx) => (
+                    <span key={c.id || c.slug} className="inline-flex items-center gap-x-2.5">
+                      {idx > 0 && <span className="text-[#b98725]">&bull;</span>}
+                      <span className="text-[#3a2f20]">{cleanCategoryName(c.name)}</span>
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Description */}
+              <p className="max-w-[540px] text-[#635746] text-[15px] sm:text-[17px] leading-[1.75] font-normal mb-8 animate-fade-in-up delay-300">
+                {hero.description}
+              </p>
+
+              {/* Call to Action Button */}
+              <div className="animate-fade-in-up delay-400">
+                <a
+                  href={hero.ctaLink || '#collections'}
+                  className="inline-flex items-center justify-center gap-3 bg-[#b98725] hover:bg-[#a6771d] text-white px-7 py-4 rounded-[4px] text-[11px] font-black tracking-[1.5px] shadow-[0_8px_24px_rgba(185,135,37,0.25)] transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(185,135,37,0.3)] no-underline uppercase group"
+                >
+                  <span>{hero.ctaText || 'EXPLORE OUR COLLECTIONS'}</span>
+                  <span className="text-sm font-bold transition-transform group-hover:translate-x-1">&rarr;</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Right Column: Editorial Visual Showcase with Ambient Floating Glow */}
+            <div className="lg:col-span-5 relative mt-4 lg:mt-0 animate-reveal">
+              {/* Warm Golden Ambient Glow */}
+              <div className="absolute -inset-4 bg-gradient-to-tr from-[#b98725]/25 via-[#f2deab]/30 to-transparent rounded-[32px] blur-2xl pointer-events-none animate-glow-pulse" />
+
+              {/* Main Decorative Showcase Frame with Subtle Floating Motion */}
+              <div className="relative mx-auto max-w-[440px] rounded-[18px] sm:rounded-[22px] p-2.5 sm:p-3 bg-white/90 backdrop-blur-xs border border-[#e8dcc2] shadow-[0_20px_50px_rgba(75,56,20,0.12)] animate-float">
+                <div className="relative h-[430px] sm:h-[490px] rounded-[14px] sm:rounded-[18px] overflow-hidden bg-[#f7f3ea]">
+                  <img
+                    src={hero.imageUrl || '/images/home/barakah_hero_new.jpg'}
+                    alt={hero.imageAlt || 'BarakahBazar Collections'}
+                    className="w-full h-full object-cover object-center hover:scale-105 transition-transform duration-700 ease-out"
+                  />
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* 2. OUR COLLECTIONS: Compact 1-Screen View Showcase */}
+      <section id="collections" className="py-8 sm:py-10 lg:py-12 bg-[#FAF7F2] relative border-b border-[#EADFC8]/60 overflow-hidden">
+        {/* Subtle decorative background texture */}
         <div
-          className="absolute inset-0 bg-cover bg-center"
+          className="absolute inset-0 pointer-events-none opacity-35"
           style={{
-            backgroundImage:
-              'linear-gradient(90deg, rgba(251,247,238,0.99) 0%, rgba(251,247,238,0.94) 29%, rgba(251,247,238,0.45) 57%, rgba(251,247,238,0.08) 100%), url("/images/home/user_collection_hero.jpg")',
+            backgroundImage: 'radial-gradient(rgba(185,135,37,0.12) 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
           }}
         />
 
-        {/* Decorative Arch on right */}
-        <div className="absolute right-[5%] bottom-[5%] w-[150px] h-[150px] border border-[rgba(185,135,37,0.55)] rounded-t-[80px] rounded-b-none opacity-65 pointer-events-none hidden md:block">
-          <div className="absolute inset-[13px] border border-[rgba(185,135,37,0.35)] rounded-t-[68px]" />
-        </div>
-
-        {/* Hero inner copy */}
-        <div className="relative w-[min(1180px,91%)] mx-auto py-[72px] sm:py-[92px] pb-[85px] sm:pb-[105px] z-10">
-          <div className="text-[10px] tracking-[4px] sm:tracking-[5px] text-[#b98725] font-black uppercase">
-            ONE BEAUTIFUL MARKETPLACE
-          </div>
-          <h1 className="font-serif text-[clamp(36px,6vw,82px)] leading-[0.95] sm:leading-[0.91] max-w-[640px] my-[15px] sm:my-[17px] text-[#16140f] font-bold tracking-tight">
-            EVERYTHING<br />WITH <span className="italic text-[#b98725]">BARAKAH</span>
-          </h1>
-          <p className="max-w-[520px] text-[#625d53] text-[14px] sm:text-[16px] leading-[1.7] sm:leading-[1.8] font-normal my-0">
-            KERALA PURE COCONUT OIL &nbsp; &bull; &nbsp; BRIDAL COLLECTION &nbsp; &bull; &nbsp; BARAKAH NATURALS
-          </p>
-          <div className="pt-2">
-            <a
-              href="#collections"
-              className="inline-flex items-center justify-center gap-2 bg-[#b98725] hover:bg-[#a6771d] text-white px-[20px] sm:px-[23px] py-[13px] sm:py-[14px] rounded-[4px] text-[11px] font-black tracking-[1.2px] mt-[10px] shadow-[0_8px_24px_rgba(185,135,37,0.24)] transition-all no-underline uppercase"
-            >
-              <span>EXPLORE OUR COLLECTIONS</span>
-              <span>&rarr;</span>
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* 2. OUR COLLECTIONS */}
-      <section id="collections" className="py-[76px] bg-[#fffdf9] relative">
-        {/* Subtle radial dot pattern */}
-        <div
-          className="absolute inset-0 pointer-events-none opacity-40"
-          style={{
-            backgroundImage: 'radial-gradient(rgba(185,135,37,0.09) 1px, transparent 1px)',
-            backgroundSize: '18px 18px',
-            maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.45), transparent 35%)',
-          }}
-        />
-
-        <div className="w-[min(1180px,91%)] mx-auto relative z-10">
-          <div className="text-center mb-[38px]">
-            <span className="text-[10px] tracking-[5px] text-[#b98725] font-black uppercase block mb-2">
-              DISCOVER A WORLD OF QUALITY, BEAUTY AND BLESSINGS
+        <div className="w-[min(1240px,92%)] mx-auto relative z-10">
+          {/* Section Header - Compact */}
+          <div className="text-center max-w-[620px] mx-auto mb-6 sm:mb-8">
+            <span className="text-[10px] font-bold tracking-[2.5px] text-[#b98725] uppercase mb-1.5 block">
+              OUR SIGNATURE WORLDS
             </span>
-            <h2 className="font-serif font-bold text-[36px] sm:text-[42px] my-[10px] text-[#16140f]">
-              OUR COLLECTIONS
+            <h2 className="font-serif text-[28px] sm:text-[36px] font-bold text-[#2c2214] tracking-tight mb-2">
+              Curated Collections
             </h2>
-            <p className="text-[12px] text-[#6d675c] tracking-[2px] uppercase m-0">
-              CURATED FOR YOUR HOME &bull; YOUR SPECIAL MOMENTS &bull; YOUR EVERYDAY
+            <p className="text-[#685c4a] text-[13px] sm:text-[14px] leading-relaxed m-0">
+              {categories.length === 3
+                ? 'Three distinct pillars of purity, timeless elegance, and artisanal living — crafted with authentic devotion and barakah.'
+                : 'Distinct pillars of purity, timeless elegance, and artisanal living — crafted with authentic devotion and barakah.'}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-[14px]">
-            {/* Card 1: Kerala Pure */}
-            <article className="bg-white border border-[#e8dcc2] rounded-[7px] overflow-hidden shadow-[0_15px_45px_rgba(75,56,20,0.09)] hover:-translate-y-[7px] hover:shadow-[0_22px_55px_rgba(75,56,20,0.15)] transition-all duration-300 group">
-              <div className="h-[280px] bg-[#f2eee4] overflow-hidden">
-                <img
-                  src="/images/home/oil/image-4.jpeg"
-                  alt="Kerala Pure Coconut Oil"
-                  className="w-full h-full object-cover group-hover:scale-[1.035] transition-transform duration-600"
-                />
-              </div>
-              <div className="text-center p-[19px_15px_23px]">
-                <div className="text-[9px] tracking-[2.5px] text-[#b98725] font-black uppercase">
-                  100% PURE &bull; NATURAL &bull; AUTHENTIC
-                </div>
-                <h3 className="font-serif font-bold text-[25px] my-2 text-[#16140f]">
-                  KERALA PURE
-                </h3>
-                <p className="font-serif text-[12px] text-[#6c6559] mb-[14px] mt-0">
-                  COCONUT OIL
-                </p>
-                <Link
-                  href="/coconut-oil"
-                  className="inline-block bg-[#b98725] hover:bg-[#a6771d] text-white px-4 py-[9px] rounded-[3px] text-[10px] font-black tracking-[1px] no-underline uppercase transition-colors"
+          {/* Dynamic Category Cards - Scaled dynamically based on count */}
+          <div className={clsx('grid gap-5 lg:gap-6', gridColsClass)}>
+            {categories.map((cat) => {
+              const cleanName = cleanCategoryName(cat.name);
+              const fallbackImg =
+                cat.slug === 'bridal'
+                  ? '/images/home/category_bridal.jpg'
+                  : cat.slug === 'coconut-oil'
+                  ? '/images/home/category_coconut_oil.jpg'
+                  : '/images/home/category_naturals.jpg';
+              const imgUrl = cat.imageUrl || fallbackImg;
+              const eyebrowText =
+                cat.eyebrow ||
+                (cat.slug === 'bridal'
+                  ? 'FESTIVE & CEREMONIAL'
+                  : cat.slug === 'coconut-oil'
+                  ? 'HERITAGE OIL'
+                  : 'SOY CANDLES & LIVING');
+              const descriptionText =
+                cat.description ||
+                cat.tagline ||
+                'Curated with authentic devotion, timeless heritage, and pure barakah.';
+
+              return (
+                <article
+                  key={cat.id || cat.slug}
+                  className="group relative bg-white rounded-xl overflow-hidden border border-[#EADFC8]/80 shadow-[0_8px_25px_rgba(75,56,20,0.05)] hover:shadow-[0_16px_40px_rgba(75,56,20,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
                 >
-                  SHOP NOW &rarr;
-                </Link>
-              </div>
-            </article>
+                  {/* Image Frame */}
+                  <div className="relative h-[200px] sm:h-[220px] lg:h-[230px] overflow-hidden bg-[#f4eee3]">
+                    <img
+                      src={imgUrl}
+                      alt={cleanName}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                    />
+                  </div>
 
-            {/* Card 2: Bridal Collection */}
-            <article className="bg-white border border-[#e8dcc2] rounded-[7px] overflow-hidden shadow-[0_15px_45px_rgba(75,56,20,0.09)] hover:-translate-y-[7px] hover:shadow-[0_22px_55px_rgba(75,56,20,0.15)] transition-all duration-300 group">
-              <div className="h-[280px] bg-[#f2eee4] overflow-hidden">
-                <img
-                  src="/images/home/bridal/image-6.jpeg"
-                  alt="Bridal Collection"
-                  className="w-full h-full object-cover object-[center_top] group-hover:scale-[1.035] transition-transform duration-600"
-                />
-              </div>
-              <div className="text-center p-[19px_15px_23px]">
-                <div className="text-[9px] tracking-[2.5px] text-[#b98725] font-black uppercase">
-                  ELEGANCE FOR YOUR SPECIAL MOMENTS
-                </div>
-                <h3 className="font-serif font-bold text-[25px] my-2 text-[#16140f]">
-                  BRIDAL COLLECTION
-                </h3>
-                <p className="font-serif text-[12px] text-[#6c6559] mb-[14px] mt-0">
-                  TIMELESS &bull; GRACEFUL &bull; CELEBRATION
-                </p>
-                <Link
-                  href="/bridal"
-                  className="inline-block bg-[#b98725] hover:bg-[#a6771d] text-white px-4 py-[9px] rounded-[3px] text-[10px] font-black tracking-[1px] no-underline uppercase transition-colors"
-                >
-                  SHOP NOW &rarr;
-                </Link>
-              </div>
-            </article>
+                  {/* Card Details */}
+                  <div className="p-4 sm:p-5 flex flex-col flex-1 justify-between bg-white">
+                    <div>
+                      <span className="text-[9px] font-bold tracking-[1.8px] text-[#b98725] uppercase block mb-1">
+                        {eyebrowText}
+                      </span>
+                      <h3 className="font-serif font-bold text-[18px] sm:text-[20px] text-[#2c2214] mb-1.5 leading-snug">
+                        {cleanName}
+                      </h3>
+                      <p className="text-[12px] sm:text-[13px] text-[#6d614f] leading-relaxed mb-4 line-clamp-3">
+                        {descriptionText}
+                      </p>
+                    </div>
 
-            {/* Card 3: Barakah Naturals */}
-            <article className="bg-white border border-[#e8dcc2] rounded-[7px] overflow-hidden shadow-[0_15px_45px_rgba(75,56,20,0.09)] hover:-translate-y-[7px] hover:shadow-[0_22px_55px_rgba(75,56,20,0.15)] transition-all duration-300 group">
-              <div className="h-[280px] bg-[#f2eee4] overflow-hidden">
-                <img
-                  src="/images/home/barakah/image-5.png"
-                  alt="Barakah Naturals"
-                  className="w-full h-full object-cover group-hover:scale-[1.035] transition-transform duration-600"
-                />
-              </div>
-              <div className="text-center p-[19px_15px_23px]">
-                <div className="text-[9px] tracking-[2.5px] text-[#b98725] font-black uppercase">
-                  LIGHT &bull; SCENT &bull; GIFTING
-                </div>
-                <h3 className="font-serif font-bold text-[25px] my-2 text-[#16140f]">
-                  BARAKAH NATURALS
-                </h3>
-                <p className="font-serif text-[12px] text-[#6c6559] mb-[14px] mt-0">
-                  CANDLES FOR A CALMER, BRIGHTER YOU
-                </p>
-                <Link
-                  href="/naturals"
-                  className="inline-block bg-[#b98725] hover:bg-[#a6771d] text-white px-4 py-[9px] rounded-[3px] text-[10px] font-black tracking-[1px] no-underline uppercase transition-colors"
-                >
-                  SHOP NOW &rarr;
-                </Link>
-              </div>
-            </article>
-          </div>
-
-          {/* Connected Trust Bar */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border border-[#e8dcc2] rounded-[8px] mt-[25px] bg-white divide-y sm:divide-y-0 sm:divide-x divide-[#e8dcc2]">
-            <div className="p-5 text-center">
-              <div className="text-xl mb-1 text-[#b98725]">&diams;</div>
-              <b className="block font-serif font-bold text-[14px] my-[5px] text-[#16140f]">Premium Quality</b>
-              <span className="text-[10px] text-[#7a746a]">Always the Best</span>
-            </div>
-            <div className="p-5 text-center">
-              <div className="text-xl mb-1 text-[#b98725]">&diams;</div>
-              <b className="block font-serif font-bold text-[14px] my-[5px] text-[#16140f]">Secure Payments</b>
-              <span className="text-[10px] text-[#7a746a]">Shop with Confidence</span>
-            </div>
-            <div className="p-5 text-center">
-              <div className="text-xl mb-1 text-[#b98725]">&diams;</div>
-              <b className="block font-serif font-bold text-[14px] my-[5px] text-[#16140f]">Fast &amp; Reliable Delivery</b>
-              <span className="text-[10px] text-[#7a746a]">Across India</span>
-            </div>
-            <div className="p-5 text-center">
-              <div className="text-xl mb-1 text-[#b98725]">&diams;</div>
-              <b className="block font-serif font-bold text-[14px] my-[5px] text-[#16140f]">Dedicated Support</b>
-              <span className="text-[10px] text-[#7a746a]">We&apos;re Here to Help</span>
-            </div>
+                    <div>
+                      <Link
+                        href={`/${cat.slug}`}
+                        className="inline-flex items-center gap-1.5 text-[11px] font-bold tracking-[1.4px] uppercase text-[#b98725] hover:text-[#8e6618] transition-colors no-underline group/link"
+                      >
+                        <span>EXPLORE COLLECTION</span>
+                        <span className="text-sm transition-transform group-hover/link:translate-x-1">&rarr;</span>
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* 3. FEATURED PRODUCTS */}
-      <section id="featured" className="py-[76px] bg-white">
-        <div className="w-[min(1180px,91%)] mx-auto">
-          <div className="text-center mb-[38px]">
-            <span className="text-[10px] tracking-[5px] text-[#b98725] font-black uppercase block mb-2">
-              HANDPICKED JUST FOR YOU
-            </span>
-            <h2 className="font-serif font-bold text-[36px] sm:text-[42px] my-[10px] text-[#16140f]">
-              FEATURED PRODUCTS
-            </h2>
-            <p className="text-[12px] text-[#6d675c] tracking-[2px] uppercase m-0">
-              FAVOURITES FROM ACROSS BARAKAHBAZAAR
-            </p>
-          </div>
+      {/* 3. ONE BARAKAH SHOPPING JOURNEY: Unified Cart, Address & Payment */}
+      <OneShoppingJourneySection />
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-[10px]">
-            {/* Product 1 */}
-            <Link
-              href="/coconut-oil/kerala-pure-coconut-oil-300ml"
-              className="border border-[#eee5d4] rounded-[6px] overflow-hidden bg-white hover:shadow-md transition-shadow no-underline block group"
-            >
-              <img src="/images/home/oil/image-5.jpeg" alt="Pure Coconut Oil 300ml" className="w-full h-[175px] object-cover bg-[#f7f3ea] group-hover:scale-[1.02] transition-transform" />
-              <div className="p-[11px]">
-                <small className="text-[8px] text-[#887a61] uppercase tracking-wider block font-bold">KERALA PURE COCONUT OIL</small>
-                <h4 className="font-serif font-semibold text-[13px] my-[5px] mb-[10px] min-h-[30px] line-clamp-2 text-[#16140f]">Pure Coconut Oil 300ml</h4>
-                <div className="font-black text-[#a87518] text-[14px]">₹149</div>
-              </div>
-            </Link>
+      {/* 4. FEATURED PRODUCTS: 2 Rows of High-End Boutique Product Cards */}
+      <FeaturedProductsSection />
 
-            {/* Product 2 */}
-            <Link
-              href="/coconut-oil/kerala-pure-coconut-oil-500ml"
-              className="border border-[#eee5d4] rounded-[6px] overflow-hidden bg-white hover:shadow-md transition-shadow no-underline block group"
-            >
-              <img src="/images/home/oil/image-5.jpeg" alt="Pure Coconut Oil 500ml" className="w-full h-[175px] object-cover bg-[#f7f3ea] group-hover:scale-[1.02] transition-transform" />
-              <div className="p-[11px]">
-                <small className="text-[8px] text-[#887a61] uppercase tracking-wider block font-bold">KERALA PURE COCONUT OIL</small>
-                <h4 className="font-serif font-semibold text-[13px] my-[5px] mb-[10px] min-h-[30px] line-clamp-2 text-[#16140f]">Pure Coconut Oil 500ml</h4>
-                <div className="font-black text-[#a87518] text-[14px]">₹249</div>
-              </div>
-            </Link>
-
-            {/* Product 3 */}
-            <Link
-              href="/naturals"
-              className="border border-[#eee5d4] rounded-[6px] overflow-hidden bg-white hover:shadow-md transition-shadow no-underline block group"
-            >
-              <img src="/images/home/barakah/image-1.jpg" alt="Signature Scented Candle" className="w-full h-[175px] object-cover bg-[#f7f3ea] group-hover:scale-[1.02] transition-transform" />
-              <div className="p-[11px]">
-                <small className="text-[8px] text-[#887a61] uppercase tracking-wider block font-bold">BARAKAH NATURALS</small>
-                <h4 className="font-serif font-semibold text-[13px] my-[5px] mb-[10px] min-h-[30px] line-clamp-2 text-[#16140f]">Signature Scented Candle</h4>
-                <div className="font-black text-[#a87518] text-[14px]">₹499</div>
-              </div>
-            </Link>
-
-            {/* Product 4 */}
-            <Link
-              href="/bridal"
-              className="border border-[#eee5d4] rounded-[6px] overflow-hidden bg-white hover:shadow-md transition-shadow no-underline block group"
-            >
-              <img src="/images/home/bridal/image-8.jpeg" alt="Premium Bridal Collection" className="w-full h-[175px] object-cover bg-[#f7f3ea] group-hover:scale-[1.02] transition-transform" />
-              <div className="p-[11px]">
-                <small className="text-[8px] text-[#887a61] uppercase tracking-wider block font-bold">BRIDAL</small>
-                <h4 className="font-serif font-semibold text-[13px] my-[5px] mb-[10px] min-h-[30px] line-clamp-2 text-[#16140f]">Premium Bridal Collection</h4>
-                <div className="font-black text-[#a87518] text-[14px]">₹8,999</div>
-              </div>
-            </Link>
-
-            {/* Product 5 */}
-            <Link
-              href="/naturals"
-              className="border border-[#eee5d4] rounded-[6px] overflow-hidden bg-white hover:shadow-md transition-shadow no-underline block group"
-            >
-              <img src="/images/home/barakah/image-3.jpg" alt="Oud Classic Candle" className="w-full h-[175px] object-cover bg-[#f7f3ea] group-hover:scale-[1.02] transition-transform" />
-              <div className="p-[11px]">
-                <small className="text-[8px] text-[#887a61] uppercase tracking-wider block font-bold">BARAKAH NATURALS</small>
-                <h4 className="font-serif font-semibold text-[13px] my-[5px] mb-[10px] min-h-[30px] line-clamp-2 text-[#16140f]">Oud Classic Candle</h4>
-                <div className="font-black text-[#a87518] text-[14px]">₹499</div>
-              </div>
-            </Link>
-
-            {/* Product 6 */}
-            <Link
-              href="/bridal"
-              className="border border-[#eee5d4] rounded-[6px] overflow-hidden bg-white hover:shadow-md transition-shadow no-underline block group"
-            >
-              <img src="/images/home/bridal/image-7.jpeg" alt="Royal Bridal Collection" className="w-full h-[175px] object-cover bg-[#f7f3ea] group-hover:scale-[1.02] transition-transform" />
-              <div className="p-[11px]">
-                <small className="text-[8px] text-[#887a61] uppercase tracking-wider block font-bold">BRIDAL</small>
-                <h4 className="font-serif font-semibold text-[13px] my-[5px] mb-[10px] min-h-[30px] line-clamp-2 text-[#16140f]">Royal Bridal Collection</h4>
-                <div className="font-black text-[#a87518] text-[14px]">₹12,999</div>
-              </div>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* 4. PHILOSOPHY */}
-      <section id="philosophy" className="py-[76px] bg-[#fbf7ee]">
-        <div className="w-[min(1180px,91%)] mx-auto grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-[55px] items-center">
-          <img
-            src="/images/home/barakah/image-4.jpg"
-            alt="Barakah Philosophy"
-            className="w-full h-[360px] sm:h-[430px] object-cover rounded-[5px] shadow-[0_20px_60px_rgba(73,52,17,0.12)]"
-          />
-          <div>
-            <div className="text-[10px] tracking-[5px] text-[#b98725] font-black uppercase mb-2">
-              MORE THAN A MARKETPLACE
-            </div>
-            <h2 className="font-serif font-bold text-[36px] sm:text-[45px] leading-[1.02] my-[10px] text-[#16140f]">
-              A BLESSED<br />JOURNEY
-            </h2>
-            <div className="w-[70px] border-t border-[#b98725] my-[15px]" />
-            <p className="font-serif text-[14px] text-[#686155] leading-[1.9] my-3">
-              BarakahBazaar brings together products that make everyday life more beautiful &mdash; authentic Kerala goodness, timeless bridal elegance and handcrafted candles for meaningful spaces.
-            </p>
-            <p className="font-serif text-[14px] text-[#686155] leading-[1.9] my-3">
-              Every collection is designed to feel warm, premium and easy to discover, so customers can find something for their home, their special moments and their brighter tomorrow.
-            </p>
-            <Link
-              href="#collections"
-              className="inline-block bg-[#b98725] hover:bg-[#a6771d] text-white px-4 py-[9px] rounded-[3px] text-[10px] font-black tracking-[1px] no-underline uppercase transition-colors mt-3"
-            >
-              SHOP ALL PRODUCTS &rarr;
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. FINAL WELCOME BANNER */}
-      <section
-        className="w-[min(1180px,91%)] mx-auto mb-[70px] min-h-[300px] relative overflow-hidden rounded-[7px] border border-[#e8dcc2] flex items-center justify-center text-center p-8 sm:p-12"
-        style={{
-          background: 'linear-gradient(90deg, rgba(249,243,228,0.98), rgba(249,243,228,0.75)), url("/images/home/barakah/image-5.png") center/cover',
-        }}
-      >
-        <div>
-          <div className="text-[10px] tracking-[3px] text-[#756b58] font-bold uppercase mb-2">
-            FOR YOUR HOME &bull; FOR YOUR SPECIAL MOMENTS &bull; FOR A BRIGHTER TOMORROW
-          </div>
-          <h2 className="font-serif font-bold text-[32px] sm:text-[45px] my-2 text-[#16140f]">
-            WELCOME TO BARAKAHBAZAAR
-          </h2>
-          <p className="text-[11px] tracking-[3px] text-[#756b58] uppercase my-2 font-bold">
-            GOODNESS &bull; ELEGANCE &bull; BLESSINGS
-          </p>
-          <Link
-            href="#collections"
-            className="inline-block bg-[#b98725] hover:bg-[#a6771d] text-white px-5 py-[11px] rounded-[3px] text-[10px] font-black tracking-[1px] no-underline uppercase transition-colors mt-3 shadow-md"
-          >
-            EXPLORE THE STORE &rarr;
-          </Link>
-        </div>
-      </section>
+      {/* 5. WHY BARAKAH BAZAR: Heritage, Craftsmanship & Values */}
+      <WhyBarakahSection />
     </div>
   );
 }
