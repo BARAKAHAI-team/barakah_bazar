@@ -49,7 +49,10 @@ function LoginForm() {
   }, [step, resendSeconds]);
 
   const handleRequestOtp = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     setError(null);
 
     const cleanPhone = phone.replace(/\D/g, '');
@@ -136,6 +139,7 @@ function LoginForm() {
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (fullOtp.length !== 6) {
       setError('Please enter all 6 digits of the OTP.');
       return;
@@ -231,7 +235,7 @@ function LoginForm() {
                 </p>
               </div>
 
-              <form onSubmit={handleRequestOtp} className="space-y-5">
+              <form onSubmit={handleRequestOtp} action="javascript:void(0);" className="space-y-5">
                 <div className="space-y-1.5">
                   <label htmlFor="phone-input" className="block text-xs font-bold uppercase tracking-wider text-[var(--ink)]">
                     Mobile Number
@@ -304,7 +308,7 @@ function LoginForm() {
                 </p>
               </div>
 
-              <form onSubmit={handleVerifyOtp} className="space-y-5">
+              <form onSubmit={handleVerifyOtp} action="javascript:void(0);" className="space-y-5">
                 {/* 6 Individual Digit Boxes */}
                 <div className="space-y-2">
                   <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--ink)]">
