@@ -14,6 +14,24 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [retrying, setRetrying] = useState(false);
+  const [trackingLoading, setTrackingLoading] = useState(false);
+
+  const handleRefreshTracking = async () => {
+    if (!order?.id) return;
+    setTrackingLoading(true);
+    try {
+      const res = await fetch(`/api/shipping/shadowfax/track?orderId=${encodeURIComponent(order.id)}`);
+      const data = await res.json();
+      if (res.ok && data.shipment) {
+        setOrder((prev: any) => ({ ...prev, shipment: data.shipment }));
+        toast('Tracking status updated.', 'success');
+      }
+    } catch {
+      toast('Could not refresh tracking.', 'error');
+    } finally {
+      setTrackingLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetch(`/api/orders/${id}`)
@@ -42,6 +60,17 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
         return;
       }
 
+      // Ensure Razorpay script is loaded dynamically
+      if (typeof window !== 'undefined' && !(window as any).Razorpay) {
+        await new Promise<void>((resolve) => {
+          const script = document.createElement('script');
+          script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+          script.onload = () => resolve();
+          script.onerror = () => resolve();
+          document.body.appendChild(script);
+        });
+      }
+
       // Check if Razorpay is loaded
       if (typeof window !== 'undefined' && (window as any).Razorpay) {
         const rzp = new (window as any).Razorpay({
@@ -65,13 +94,26 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             if (vData.ok) {
               window.location.href = `/checkout/success?order=${order.order_number}`;
             } else {
-              toast('Payment signature verification failed', 'error');
+              toast(vData.error?.message || 'Payment signature verification failed', 'error');
             }
           },
           prefill: {
             contact: order.notify_phone,
             email: order.notify_email || '',
           },
+          theme: {
+            color: '#B98725',
+          },
+          modal: {
+            ondismiss: () => {
+              setRetrying(false);
+              toast('Payment window closed.', 'info');
+            },
+          },
+        });
+        rzp.on('payment.failed', (resp: any) => {
+          setRetrying(false);
+          toast(resp?.error?.description || 'Payment failed. Please try again.', 'error');
         });
         rzp.open();
       } else {
@@ -234,11 +276,83 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             <span>Total Amount</span>
             <span className="tabular-nums font-serif text-lg">{formatINR(order.total_paise)}</span>
           </div>
-          <div className="pt-2 text-[11px] text-[var(--ink-muted)]">
-            Payment Status: <strong className="uppercase">{order.payment_status}</strong>
+          <div className="pt-2 text-[11px] text-[var(--ink-muted)] space-y-1">
+            <div>
+              Payment Status: <strong className="uppercase">{order.payment_status}</strong>
+            </div>
+            {order.payment?.razorpay_payment_id && (
+              <div>
+                Payment ID: <span className="font-mono text-[var(--ink)]">{order.payment.razorpay_payment_id}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Delivery & Shadowfax Tracking */}
+      <section className="p-6 border border-[var(--line)] bg-[var(--surface)] rounded-[2px] space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 className="font-serif text-lg text-[var(--ink)] m-0">Delivery &amp; Courier Tracking</h2>
+            <p className="text-xs text-[var(--ink-muted)] m-0 mt-0.5">
+              {order.shipment
+                ? `Fulfilled by ${order.shipment.courier} Express`
+                : order.order_status === 'PENDING_PAYMENT'
+                ? 'Shipment will be scheduled once payment is completed.'
+                : 'Your order is confirmed and being packed for Shadowfax pickup.'}
+            </p>
+          </div>
+          {order.shipment && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                loading={trackingLoading}
+                onClick={handleRefreshTracking}
+              >
+                Refresh Tracking
+              </Button>
+              <a
+                href={order.shipment.trackingUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-medium text-[#8C6418] hover:text-[var(--ink)] underline underline-offset-4 px-2"
+              >
+                Track on Shadowfax &rarr;
+              </a>
+            </div>
+          )}
+        </div>
+
+        {order.shipment && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-[var(--bg)] border border-[var(--line)] rounded-[2px] text-xs">
+            <div>
+              <span className="text-[11px] uppercase tracking-wider text-[var(--ink-muted)] block mb-0.5">
+                AWB Tracking No.
+              </span>
+              <span className="font-mono font-semibold text-[var(--ink)]">{order.shipment.awbNumber}</span>
+            </div>
+            <div>
+              <span className="text-[11px] uppercase tracking-wider text-[var(--ink-muted)] block mb-0.5">
+                Shipment Status
+              </span>
+              <span className="font-semibold text-[var(--ink)]">{order.shipment.status.replace(/_/g, ' ')}</span>
+            </div>
+            <div>
+              <span className="text-[11px] uppercase tracking-wider text-[var(--ink-muted)] block mb-0.5">
+                Est. Delivery
+              </span>
+              <span className="font-semibold text-[var(--ink)]">
+                {new Date(order.shipment.estimatedDelivery).toLocaleDateString('en-IN', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+                })}
+              </span>
+            </div>
+          </div>
+        )}
+      </section>
 
       {/* Status History Timeline */}
       <section className="p-6 border border-[var(--line)] bg-[var(--surface)] rounded-[2px] space-y-4">

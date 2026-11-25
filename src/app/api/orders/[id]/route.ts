@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { memoryOrders } from '../route';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { getShipmentByOrderId } from '@/lib/shipping/shipment-store';
 
 function getSessionUser(req: NextRequest) {
   const cookie = req.cookies.get('bz_session');
@@ -45,13 +46,29 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
         query = query.eq('order_number', id);
       }
 
-      if (session.role !== 'ADMIN') {
+      if (String(session.role || '').toLowerCase() !== 'admin') {
         query = query.eq('user_id', session.userId);
       }
 
       const { data: dbOrder, error } = await query.maybeSingle();
 
       if (!error && dbOrder) {
+        const [{ data: historyRows }, { data: paymentRows }] = await Promise.all([
+          supabase
+            .from('order_status_history')
+            .select('*')
+            .eq('order_id', dbOrder.id)
+            .order('created_at', { ascending: true }),
+          supabase
+            .from('payments')
+            .select('razorpay_order_id, razorpay_payment_id, status, method, created_at')
+            .eq('order_id', dbOrder.id)
+            .order('created_at', { ascending: false })
+            .limit(1),
+        ]);
+
+        const shipment = getShipmentByOrderId(dbOrder.id);
+
         const formatted = {
           id: dbOrder.id,
           order_number: dbOrder.order_number,
@@ -65,6 +82,8 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
           total_paise: dbOrder.total_paise,
           payment_status: dbOrder.payment_status,
           order_status: dbOrder.order_status,
+          payment: paymentRows?.[0] || null,
+          shipment,
           items: (dbOrder.order_items || []).map((it: any) => ({
             id: it.id,
             variantId: it.variant_id,
@@ -75,13 +94,16 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
             qty: it.qty,
             unit_price_paise: it.unit_price_paise,
           })),
-          status_history: [
-            {
-              status: dbOrder.order_status,
-              note: `Order is ${dbOrder.order_status}`,
-              created_at: dbOrder.created_at,
-            },
-          ],
+          status_history:
+            historyRows && historyRows.length > 0
+              ? historyRows
+              : [
+                  {
+                    status: dbOrder.order_status,
+                    note: `Order is ${dbOrder.order_status}`,
+                    created_at: dbOrder.created_at,
+                  },
+                ],
           created_at: dbOrder.created_at,
           updated_at: dbOrder.updated_at,
         };
