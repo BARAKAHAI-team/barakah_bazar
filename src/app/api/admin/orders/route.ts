@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { getShipmentByOrderId } from '@/lib/shipping/shipment-store';
 
 // In-memory fallback orders if Supabase is initializing or offline
 export let inMemoryOrders: any[] = [
@@ -153,6 +154,7 @@ export async function GET(req: NextRequest) {
             order_status: o.order_status,
             created_at: o.created_at,
             address_snapshot: o.address_snapshot,
+            shipment: getShipmentByOrderId(o.id),
             items: (o.order_items || []).map((it: any) => ({
               id: it.id,
               product_name: it.products?.name || 'Barakah Product',
@@ -194,7 +196,11 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ ok: true, orders: result, count: result.length });
+    return NextResponse.json({
+      ok: true,
+      orders: result.map((o) => ({ ...o, shipment: getShipmentByOrderId(o.id) })),
+      count: result.length,
+    });
   } catch (err: any) {
     return NextResponse.json(
       { ok: false, error: { code: 'FETCH_ERROR', message: err.message || 'Failed to list orders' } },

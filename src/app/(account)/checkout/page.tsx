@@ -127,10 +127,10 @@ export default function CheckoutPage() {
     }
   };
 
-  const handleCreateOrder = async () => {
+  const handleCreateOrder = async (): Promise<any | null> => {
     if (!selectedAddressId) {
       toast('Please select or add a delivery address.', 'error');
-      return;
+      return null;
     }
 
     setSubmitting(true);
@@ -148,17 +148,20 @@ export default function CheckoutPage() {
       if (res.status === 409) {
         toast('Stock shortage detected. Please update your cart.', 'error');
         router.push('/cart');
-        return;
+        return null;
       }
 
       if (!res.ok) {
         toast(data.error?.message || 'Order creation failed', 'error');
+        return null;
       } else {
         setCreatedOrder(data.order);
         toast(`Order ${data.order.order_number} initialized!`, 'success');
+        return data.order;
       }
     } catch {
       toast('Failed to process order', 'error');
+      return null;
     } finally {
       setSubmitting(false);
     }
@@ -166,9 +169,8 @@ export default function CheckoutPage() {
 
   const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!createdOrder) {
-      toast('Creating order snapshot before applying coupon...');
-      await handleCreateOrder();
+    if (!couponCode.trim()) {
+      setCouponError('Please enter a coupon code.');
       return;
     }
 
@@ -176,7 +178,15 @@ export default function CheckoutPage() {
     setCouponError(null);
 
     try {
-      const res = await fetch(`/api/orders/${createdOrder.id}/coupon`, {
+      let targetOrder = createdOrder;
+      if (!targetOrder) {
+        targetOrder = await handleCreateOrder();
+        if (!targetOrder) {
+          return;
+        }
+      }
+
+      const res = await fetch(`/api/orders/${targetOrder.id}/coupon`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: couponCode }),
@@ -316,6 +326,10 @@ export default function CheckoutPage() {
               toast('Payment window closed.', 'info');
             },
           },
+        });
+        rzp.on('payment.failed', (resp: any) => {
+          setSubmitting(false);
+          toast(resp?.error?.description || 'Payment failed. Please try again.', 'error');
         });
         rzp.open();
       } else {

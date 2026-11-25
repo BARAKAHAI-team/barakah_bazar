@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { memoryOrders } from '../../route';
+import { inMemoryCoupons } from '@/app/api/admin/coupons/route';
 import { calculateCouponDiscount, CouponRecord } from '@/lib/pricing/coupon';
+import { createAdminClient } from '@/lib/supabase/admin';
 
-// Seed coupons from seed.sql
-const AVAILABLE_COUPONS: Record<string, CouponRecord> = {
+const FALLBACK_COUPONS: Record<string, CouponRecord> = {
   PROMO10: {
     code: 'PROMO10',
     type: 'PERCENT',
     value: 10,
-    max_discount_paise: 200000, // ₹2000
-    min_order_paise: 100000,    // ₹1000
+    max_discount_paise: 200000,
+    min_order_paise: 100000,
     valid_from: new Date(Date.now() - 86400000 * 30).toISOString(),
     valid_to: new Date(Date.now() + 86400000 * 365).toISOString(),
     is_active: true,
@@ -18,21 +19,11 @@ const AVAILABLE_COUPONS: Record<string, CouponRecord> = {
   FLAT500: {
     code: 'FLAT500',
     type: 'FLAT',
-    value: 50000,               // ₹500
+    value: 50000,
     max_discount_paise: null,
-    min_order_paise: 250000,    // ₹2500
+    min_order_paise: 250000,
     valid_from: new Date(Date.now() - 86400000 * 30).toISOString(),
     valid_to: new Date(Date.now() + 86400000 * 365).toISOString(),
-    is_active: true,
-  },
-  EXPIRED20: {
-    code: 'EXPIRED20',
-    type: 'PERCENT',
-    value: 20,
-    max_discount_paise: 100000,
-    min_order_paise: 50000,
-    valid_from: new Date(Date.now() - 86400000 * 60).toISOString(),
-    valid_to: new Date(Date.now() - 86400000 * 1).toISOString(),
     is_active: true,
   },
 };
@@ -44,6 +35,112 @@ function getSessionUser(req: NextRequest) {
     return JSON.parse(cookie.value);
   } catch {
     return null;
+  }
+}
+
+async function findOrderForUser(orderId: string, userId: string) {
+  if (process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    try {
+      const supabase = createAdminClient() as any;
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('id', orderId)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (!error && data) {
+        return { source: 'supabase' as const, order: data };
+      }
+    } catch (err) {
+      console.warn('Supabase order lookup in coupon route:', err);
+    }
+  }
+
+  const orders = memoryOrders.get(userId) || [];
+  const memOrder = orders.find((o) => o.id === orderId);
+  if (memOrder) {
+    return { source: 'memory' as const, order: memOrder };
+  }
+
+  return null;
+}
+
+async function findCouponByCode(code: string): Promise<CouponRecord | null> {
+  if (process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    try {
+      const supabase = createAdminClient() as any;
+      const { data, error } = await supabase
+        .from('coupons')
+        .select('*')
+        .eq('code', code)
+        .maybeSingle();
+
+      if (!error && data) {
+        return {
+          code: data.code,
+          type: data.type,
+          value: data.value,
+          max_discount_paise: data.max_discount_paise,
+          min_order_paise: data.min_order_paise ?? 0,
+          valid_from: data.valid_from,
+          valid_to: data.valid_to,
+          is_active: data.is_active,
+        };
+      }
+    } catch (err) {
+      console.warn('Supabase coupon lookup error:', err);
+    }
+  }
+
+  const memCoupon = inMemoryCoupons.find((c) => c.code.toUpperCase() === code);
+  if (memCoupon) {
+    return {
+      code: memCoupon.code,
+      type: memCoupon.type,
+      value: memCoupon.type === 'FLAT' && memCoupon.value < 5000 ? memCoupon.value * 100 : memCoupon.value,
+      max_discount_paise: memCoupon.max_discount_paise ?? null,
+      min_order_paise: memCoupon.min_order_paise ?? 0,
+      valid_from: memCoupon.valid_from,
+      valid_to: memCoupon.valid_to,
+      is_active: memCoupon.is_active,
+    };
+  }
+
+  return FALLBACK_COUPONS[code] || null;
+}
+
+async function persistOrderCoupon(
+  orderId: string,
+  userId: string,
+  couponCode: string | null,
+  discountPaise: number,
+  totalPaise: number
+) {
+  if (process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    try {
+      const supabase = createAdminClient() as any;
+      await supabase
+        .from('orders')
+        .update({
+          coupon_code: couponCode,
+          discount_paise: discountPaise,
+          total_paise: totalPaise,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', orderId)
+        .eq('user_id', userId);
+    } catch (err) {
+      console.warn('Supabase order coupon update error:', err);
+    }
+  }
+
+  const orders = memoryOrders.get(userId) || [];
+  const memOrder = orders.find((o) => o.id === orderId);
+  if (memOrder) {
+    memOrder.coupon_code = couponCode;
+    memOrder.discount_paise = discountPaise;
+    memOrder.total_paise = totalPaise;
   }
 }
 
@@ -61,16 +158,15 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
   }
 
   const { id } = await params;
-  const orders = memoryOrders.get(session.userId) || [];
-  const order = orders.find((o) => o.id === id);
-
-  if (!order) {
+  const found = await findOrderForUser(id, session.userId);
+  if (!found) {
     return NextResponse.json(
       { ok: false, error: { code: 'NOT_FOUND', message: 'Order not found.' } },
       { status: 404 }
     );
   }
 
+  const { order } = found;
   if (order.order_status !== 'PENDING_PAYMENT') {
     return NextResponse.json(
       { ok: false, error: { code: 'ORDER_LOCKED', message: 'Coupons cannot be modified on this order.' } },
@@ -89,7 +185,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     }
 
     const code = parsed.data.code.trim().toUpperCase();
-    const coupon = AVAILABLE_COUPONS[code] || null;
+    const coupon = await findCouponByCode(code);
 
     const result = calculateCouponDiscount(coupon, order.subtotal_paise);
     if (!result.valid) {
@@ -99,15 +195,13 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       );
     }
 
-    order.coupon_code = result.code;
-    order.discount_paise = result.discountPaise;
-    order.total_paise = result.newTotalPaise;
+    await persistOrderCoupon(id, session.userId, result.code, result.discountPaise, result.newTotalPaise);
 
     return NextResponse.json({
       ok: true,
-      couponCode: order.coupon_code,
-      discountPaise: order.discount_paise,
-      totalPaise: order.total_paise,
+      couponCode: result.code,
+      discountPaise: result.discountPaise,
+      totalPaise: result.newTotalPaise,
     });
   } catch (err: any) {
     return NextResponse.json(
@@ -127,23 +221,27 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
   }
 
   const { id } = await params;
-  const orders = memoryOrders.get(session.userId) || [];
-  const order = orders.find((o) => o.id === id);
-
-  if (!order) {
+  const found = await findOrderForUser(id, session.userId);
+  if (!found) {
     return NextResponse.json(
       { ok: false, error: { code: 'NOT_FOUND', message: 'Order not found.' } },
       { status: 404 }
     );
   }
 
-  order.coupon_code = null;
-  order.discount_paise = 0;
-  order.total_paise = order.subtotal_paise;
+  const { order } = found;
+  if (order.order_status !== 'PENDING_PAYMENT') {
+    return NextResponse.json(
+      { ok: false, error: { code: 'ORDER_LOCKED', message: 'Coupons cannot be modified on this order.' } },
+      { status: 400 }
+    );
+  }
+
+  await persistOrderCoupon(id, session.userId, null, 0, order.subtotal_paise);
 
   return NextResponse.json({
     ok: true,
-    totalPaise: order.total_paise,
+    totalPaise: order.subtotal_paise,
     message: 'Coupon removed.',
   });
 }

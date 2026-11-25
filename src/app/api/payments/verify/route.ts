@@ -44,9 +44,20 @@ export async function POST(req: NextRequest) {
 
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = parsed.data;
 
-    // In dev mode with mock signature, allow bypass; otherwise verify HMAC
+    // Verify HMAC signature (only allow mock bypass in non-production for order_mock_ IDs)
     const secret = process.env.RAZORPAY_KEY_SECRET;
-    if (secret && razorpay_signature !== 'mock_signature_for_dev_mode') {
+    const isMockOrder =
+      process.env.NODE_ENV !== 'production' &&
+      razorpay_order_id.startsWith('order_mock_') &&
+      razorpay_signature === 'mock_signature_for_dev_mode';
+
+    if (!isMockOrder) {
+      if (!secret) {
+        return NextResponse.json(
+          { ok: false, error: { code: 'CONFIG_ERROR', message: 'Razorpay secret not configured.' } },
+          { status: 500 }
+        );
+      }
       const isValid = verifyCheckoutSignature(
         razorpay_order_id,
         razorpay_payment_id,
@@ -67,16 +78,37 @@ export async function POST(req: NextRequest) {
     if (process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.NEXT_PUBLIC_SUPABASE_URL) {
       try {
         const supabase = createAdminClient() as any;
-        const { data: dbOrders } = await supabase
-          .from('orders')
-          .select('*')
-          .eq('user_id', session.userId)
-          .eq('order_status', 'PENDING_PAYMENT')
-          .order('created_at', { ascending: false })
-          .limit(1);
 
-        if (dbOrders && dbOrders.length > 0) {
-          targetOrder = dbOrders[0];
+        // 1. Match exact razorpay_order_id in payments table first
+        const { data: paymentRow } = await supabase
+          .from('payments')
+          .select('order_id')
+          .eq('razorpay_order_id', razorpay_order_id)
+          .maybeSingle();
+
+        if (paymentRow?.order_id) {
+          const { data: matchedOrder } = await supabase
+            .from('orders')
+            .select('*')
+            .eq('id', paymentRow.order_id)
+            .eq('user_id', session.userId)
+            .maybeSingle();
+          if (matchedOrder) targetOrder = matchedOrder;
+        }
+
+        // 2. Fallback to latest pending order for user
+        if (!targetOrder) {
+          const { data: dbOrders } = await supabase
+            .from('orders')
+            .select('*')
+            .eq('user_id', session.userId)
+            .eq('order_status', 'PENDING_PAYMENT')
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+          if (dbOrders && dbOrders.length > 0) {
+            targetOrder = dbOrders[0];
+          }
         }
       } catch (err) {
         console.warn('Supabase order lookup in verify error:', err);
@@ -127,6 +159,35 @@ export async function POST(req: NextRequest) {
             updated_at: new Date().toISOString(),
           })
           .eq('id', targetOrder.id);
+
+        await supabase
+          .from('payments')
+          .update({
+            razorpay_payment_id,
+            status: 'CAPTURED',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('razorpay_order_id', razorpay_order_id);
+
+        await supabase.from('order_status_history').insert({
+          order_id: targetOrder.id,
+          status: 'CONFIRMED',
+          note: `Payment confirmed via Razorpay (${razorpay_payment_id}).`,
+        });
+
+        if (targetOrder.coupon_code) {
+          const { data: cpn } = await supabase
+            .from('coupons')
+            .select('id, used_count')
+            .eq('code', targetOrder.coupon_code)
+            .maybeSingle();
+          if (cpn) {
+            await supabase
+              .from('coupons')
+              .update({ used_count: (cpn.used_count || 0) + 1 })
+              .eq('id', cpn.id);
+          }
+        }
 
         await supabase
           .from('cart_items')

@@ -55,6 +55,14 @@ interface Order {
     state: string;
     pincode: string;
   };
+  shipment?: {
+    courier: string;
+    awbNumber: string;
+    trackingUrl: string;
+    status: string;
+    estimatedDelivery: string;
+    mode: 'LIVE' | 'SANDBOX';
+  } | null;
   items?: OrderItem[];
 }
 
@@ -65,6 +73,7 @@ export default function AdminOrdersPage() {
   const [search, setSearch] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [dispatchingId, setDispatchingId] = useState<string | null>(null);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -114,6 +123,28 @@ export default function AdminOrdersPage() {
       console.error('Failed to update status:', err);
     } finally {
       setUpdatingId(null);
+    }
+  };
+
+  const handleDispatchShadowfax = async (orderId: string) => {
+    setDispatchingId(orderId);
+    try {
+      const res = await fetch(`/api/admin/orders/${orderId}/dispatch`, {
+        method: 'POST',
+      });
+      const data = await res.json();
+      if (res.ok && data.shipment) {
+        setOrders((prev) =>
+          prev.map((o) => (o.id === orderId ? { ...o, shipment: data.shipment } : o))
+        );
+        if (selectedOrder && selectedOrder.id === orderId) {
+          setSelectedOrder((prev) => (prev ? { ...prev, shipment: data.shipment } : null));
+        }
+      }
+    } catch (err) {
+      console.error('Failed to dispatch via Shadowfax:', err);
+    } finally {
+      setDispatchingId(null);
     }
   };
 
@@ -491,6 +522,60 @@ export default function AdminOrdersPage() {
                   <span>Total Amount:</span>
                   <span>₹{(selectedOrder.total_paise / 100).toLocaleString('en-IN')}</span>
                 </div>
+              </div>
+
+              {/* Shadowfax Logistics & Dispatch */}
+              <div className="p-4 rounded-xl border border-[#E8E2D5] bg-white space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <h4 className="font-serif font-bold text-sm text-[#0F3E2E] flex items-center gap-1.5 m-0">
+                    <Truck size={15} className="text-[#B98725]" />
+                    Shadowfax Courier Dispatch
+                  </h4>
+                  {selectedOrder.shipment ? (
+                    <a
+                      href={selectedOrder.shipment.trackingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-[#B98725] hover:text-[#0F3E2E] no-underline"
+                    >
+                      <span>Track AWB</span>
+                      <ExternalLink size={12} />
+                    </a>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={dispatchingId === selectedOrder.id}
+                      onClick={() => handleDispatchShadowfax(selectedOrder.id)}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#0F3E2E] hover:bg-[#16503c] text-white text-xs font-semibold cursor-pointer disabled:opacity-50 transition-colors border-0"
+                    >
+                      <Truck size={13} />
+                      <span>
+                        {dispatchingId === selectedOrder.id ? 'Creating AWB...' : 'Dispatch via Shadowfax'}
+                      </span>
+                    </button>
+                  )}
+                </div>
+
+                {selectedOrder.shipment ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs bg-[#FAF7F0] p-3 rounded-lg border border-[#E8E2D5]">
+                    <div>
+                      <span className="text-[10px] uppercase tracking-wider text-[#736B5E] block">AWB Number</span>
+                      <span className="font-mono font-bold text-[#1E1B15]">{selectedOrder.shipment.awbNumber}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase tracking-wider text-[#736B5E] block">Status</span>
+                      <span className="font-semibold text-[#0F3E2E]">{selectedOrder.shipment.status}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase tracking-wider text-[#736B5E] block">Mode</span>
+                      <span className="font-semibold text-[#8A641A]">{selectedOrder.shipment.mode}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-[#736B5E] m-0">
+                    Not dispatched yet. Click &ldquo;Dispatch via Shadowfax&rdquo; to generate an AWB and notify tracking.
+                  </p>
+                )}
               </div>
             </div>
 

@@ -84,11 +84,11 @@ export async function POST(req: NextRequest) {
     const keyId = process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_placeholder';
     const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
-    // Check if uncaptured payment already exists for this order
+    // Check if uncaptured payment already exists for this order WITH the same amount
     let existingPayment = memoryPayments.get(orderId);
     let rzpOrderId = existingPayment ? existingPayment.razorpayOrderId : '';
 
-    if (!existingPayment || existingPayment.status !== 'CREATED') {
+    if (!existingPayment || existingPayment.status !== 'CREATED' || existingPayment.amountPaise !== amount) {
       if (
         keyId &&
         keySecret &&
@@ -115,7 +115,10 @@ export async function POST(req: NextRequest) {
 
           rzpOrderId = createdRzpOrder.id;
         } catch (apiErr: any) {
-          console.warn('[Razorpay API Warning] Falling back to mock order:', apiErr.message);
+          console.warn(
+            '[Razorpay API Warning] Falling back to mock order:',
+            apiErr?.error?.description || apiErr?.message || JSON.stringify(apiErr)
+          );
           rzpOrderId = `order_mock_${Date.now()}`;
         }
       } else {
@@ -129,6 +132,21 @@ export async function POST(req: NextRequest) {
         status: 'CREATED',
         amountPaise: amount,
       });
+
+      // Persist payment intent in Supabase payments table
+      if (process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.NEXT_PUBLIC_SUPABASE_URL) {
+        try {
+          const supabase = createAdminClient() as any;
+          await supabase.from('payments').insert({
+            order_id: orderId,
+            razorpay_order_id: rzpOrderId,
+            status: 'CREATED',
+            amount_paise: Math.round(amount),
+          });
+        } catch (dbErr) {
+          console.warn('Supabase payment insert warning:', dbErr);
+        }
+      }
     }
 
     return NextResponse.json({
