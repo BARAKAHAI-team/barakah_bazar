@@ -299,7 +299,9 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                 ? `Fulfilled by ${order.shipment.courier} Express`
                 : order.order_status === 'PENDING_PAYMENT'
                 ? 'Shipment will be scheduled once payment is completed.'
-                : 'Your order is confirmed and being packed for Shadowfax pickup.'}
+                : order.order_status === 'DELIVERED'
+                ? 'Your order has been delivered.'
+                : 'Order confirmed. Our team is preparing your order for dispatch — courier tracking details will appear here once shipped.'}
             </p>
           </div>
           {order.shipment && (

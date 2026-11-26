@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
         `)
         .eq('user_id', session.userId);
 
-      if (!error && data) {
+      if (!error && data && (data.length > 0 || (memoryCart.get(session.userId) || []).length === 0)) {
         let subtotalPaise = 0;
         let hasIssues = false;
 

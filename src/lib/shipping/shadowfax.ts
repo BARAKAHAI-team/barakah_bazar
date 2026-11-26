@@ -161,3 +161,80 @@ export async function trackShadowfaxShipment(existing: ShipmentRecord): Promise<
 
   return existing;
 }
+
+export interface ServiceabilityResult {
+  ok: boolean;
+  pincode: string;
+  serviceable: boolean;
+  prepaid: boolean;
+  cod: boolean;
+  estimatedDays: string | null;
+  mode: 'LIVE' | 'SANDBOX' | 'VALIDATION';
+  message: string;
+}
+
+export async function checkShadowfaxServiceability(pincode: string): Promise<ServiceabilityResult> {
+  const clean = String(pincode || '').trim();
+  if (!/^[1-9][0-9]{5}$/.test(clean)) {
+    return {
+      ok: false,
+      pincode: clean,
+      serviceable: false,
+      prepaid: false,
+      cod: false,
+      estimatedDays: null,
+      mode: 'VALIDATION',
+      message: 'Please enter a valid 6-digit Indian pincode.',
+    };
+  }
+
+  const apiKey = process.env.SHADOWFAX_API_KEY;
+  const baseUrl = (process.env.SHADOWFAX_BASE_URL || 'https://dale.shadowfax.in/api/v3').replace(/\/$/, '');
+  const pickupPincode = process.env.SHADOWFAX_PICKUP_PINCODE || '560001';
+
+  if (apiKey && !apiKey.includes('placeholder')) {
+    try {
+      const url = `${baseUrl}/clients/serviceability/?pincode=${encodeURIComponent(clean)}&pickup_pincode=${encodeURIComponent(pickupPincode)}`;
+      const res = await fetch(url, {
+        headers: { Authorization: `Token ${apiKey}` },
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok && data) {
+        const serviceable = Boolean(data.serviceable ?? data.is_serviceable ?? true);
+        const estimatedDays = String(data.estimated_days || data.tat_days || '3-5');
+        return {
+          ok: true,
+          pincode: clean,
+          serviceable,
+          prepaid: Boolean(data.prepaid ?? true),
+          cod: Boolean(data.cod ?? false),
+          estimatedDays: serviceable ? estimatedDays : null,
+          mode: 'LIVE',
+          message: serviceable
+            ? `Delivery available via Shadowfax Express (${estimatedDays} business days).`
+            : 'Sorry, this pincode is currently not serviceable by Shadowfax.',
+        };
+      }
+      console.warn('[Shadowfax Serviceability Warning] Falling back to sandbox:', res.status, data);
+    } catch (err: any) {
+      console.warn('[Shadowfax Serviceability Error] Falling back to sandbox:', err?.message || err);
+    }
+  }
+
+  const firstDigit = clean[0];
+  let estimatedDays = '4-6';
+  if (clean.startsWith('560')) estimatedDays = '1-2';
+  else if (['5', '6'].includes(firstDigit)) estimatedDays = '2-3';
+  else if (['1', '4', '7'].includes(firstDigit)) estimatedDays = '3-4';
+
+  return {
+    ok: true,
+    pincode: clean,
+    serviceable: true,
+    prepaid: true,
+    cod: false,
+    estimatedDays,
+    mode: 'SANDBOX',
+    message: `Delivery available via Shadowfax Express (${estimatedDays} business days).`,
+  };
+}

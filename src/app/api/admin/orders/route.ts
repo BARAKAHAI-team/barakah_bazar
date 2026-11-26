@@ -122,14 +122,7 @@ export async function GET(req: NextRequest) {
           .from('orders')
           .select(`
             *,
-            profiles:user_id(name, phone, email),
-            order_items(
-              id,
-              quantity,
-              price_paise,
-              products:product_id(name, thumbnail_url),
-              product_variants:variant_id(label, sku)
-            )
+            order_items (*)
           `)
           .order('created_at', { ascending: false });
 
@@ -138,32 +131,46 @@ export async function GET(req: NextRequest) {
         }
 
         const { data: dbOrders, error } = await query;
-        if (!error && dbOrders && dbOrders.length > 0) {
-          const formatted = dbOrders.map((o: any) => ({
-            id: o.id,
-            order_number: o.order_number,
-            user_id: o.user_id,
-            notify_phone: o.notify_phone || o.profiles?.phone,
-            notify_email: o.notify_email || o.profiles?.email,
-            customer_name: o.profiles?.name || o.address_snapshot?.name || 'Customer',
-            subtotal_paise: o.subtotal_paise,
-            discount_paise: o.discount_paise || 0,
-            coupon_code: o.coupon_code,
-            total_paise: o.total_paise,
-            payment_status: o.payment_status,
-            order_status: o.order_status,
-            created_at: o.created_at,
-            address_snapshot: o.address_snapshot,
-            shipment: getShipmentByOrderId(o.id),
-            items: (o.order_items || []).map((it: any) => ({
-              id: it.id,
-              product_name: it.products?.name || 'Barakah Product',
-              variant_label: it.product_variants?.label || 'Default',
-              quantity: it.quantity,
-              price_paise: it.price_paise,
-              thumbnail_url: it.products?.thumbnail_url || null,
-            })),
-          }));
+        if (!error && dbOrders) {
+          // Optionally enrich customer names from profiles
+          const userIds = Array.from(new Set(dbOrders.map((o: any) => o.user_id).filter(Boolean)));
+          const profileMap = new Map<string, any>();
+          if (userIds.length > 0) {
+            const { data: profilesData } = await supabase
+              .from('profiles')
+              .select('id, name, phone, email')
+              .in('id', userIds);
+            (profilesData || []).forEach((p: any) => profileMap.set(p.id, p));
+          }
+
+          const formatted = dbOrders.map((o: any) => {
+            const prof = profileMap.get(o.user_id);
+            return {
+              id: o.id,
+              order_number: o.order_number,
+              user_id: o.user_id,
+              notify_phone: o.notify_phone || prof?.phone || o.address_snapshot?.phone || '',
+              notify_email: o.notify_email || prof?.email || null,
+              customer_name: o.address_snapshot?.name || prof?.name || 'Customer',
+              subtotal_paise: o.subtotal_paise,
+              discount_paise: o.discount_paise || 0,
+              coupon_code: o.coupon_code,
+              total_paise: o.total_paise,
+              payment_status: o.payment_status,
+              order_status: o.order_status,
+              created_at: o.created_at,
+              address_snapshot: o.address_snapshot,
+              shipment: getShipmentByOrderId(o.id),
+              items: (o.order_items || []).map((it: any) => ({
+                id: it.id,
+                product_name: it.name_snapshot || 'Barakah Product',
+                variant_label: it.variant_label_snapshot || 'Default',
+                quantity: it.qty ?? 1,
+                price_paise: it.unit_price_paise ?? 0,
+                thumbnail_url: it.image_path_snapshot || null,
+              })),
+            };
+          });
 
           let filtered = formatted;
           if (search) {

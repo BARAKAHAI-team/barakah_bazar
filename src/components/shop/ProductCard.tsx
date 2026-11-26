@@ -9,6 +9,7 @@ import { CatalogProduct } from '@/lib/catalog/types';
 import { Price } from '@/components/ui/Price';
 import { useToast } from '@/components/ui/Toast';
 import { clientStore } from '@/lib/store';
+import { isUserLoggedIn, redirectToLogin } from '@/lib/auth/require-login';
 import { QuickAddModal, QuickAddProductData } from '@/components/shop/QuickAddModal';
 
 export interface ProductCardProps {
@@ -131,6 +132,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, className }) 
 
     if (!targetVariant || targetVariant.stock === 0) {
       toast('Selected item is currently sold out.', 'info');
+      return;
+    }
+
+    if (!isUserLoggedIn()) {
+      redirectToLogin(
+        {
+          type: 'cart',
+          productId: product.id,
+          variantId: targetVariant.id,
+          qty: 1,
+        },
+        `/${product.category_slug}/${product.slug}`,
+        toast,
+        'Please log in to add items to your cart.'
+      );
       return;
     }
 

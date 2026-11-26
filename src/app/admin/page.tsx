@@ -277,7 +277,7 @@ export default function AdminDashboardPage() {
                     </td>
                     <td className="py-3 px-4 text-right">
                       <Link
-                        href="/admin/orders"
+                        href={`/admin/orders?orderId=${encodeURIComponent(ord.id)}`}
                         className="text-[#0F3E2E] font-semibold hover:text-[#B98725] transition-colors"
                       >
                         Inspect &rarr;

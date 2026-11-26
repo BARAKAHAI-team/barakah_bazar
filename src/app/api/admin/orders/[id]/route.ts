@@ -24,9 +24,23 @@ export async function PATCH(
           .update(updatePayload)
           .eq('id', id)
           .select()
-          .single();
+          .maybeSingle();
 
-        if (!error && data) {
+        if (error) {
+          return NextResponse.json(
+            { ok: false, error: { code: 'DB_UPDATE_ERROR', message: error.message } },
+            { status: 400 }
+          );
+        }
+
+        if (data) {
+          if (order_status) {
+            await supabase.from('order_status_history').insert({
+              order_id: id,
+              status: order_status,
+              note: `Order status updated to ${order_status} by Admin.`,
+            });
+          }
           return NextResponse.json({ ok: true, order: data });
         }
       } catch (err) {

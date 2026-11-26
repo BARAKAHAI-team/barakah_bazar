@@ -16,6 +16,7 @@ import { CatalogProduct } from '@/lib/catalog/types';
 import { Price } from '@/components/ui/Price';
 import { useToast } from '@/components/ui/Toast';
 import { clientStore } from '@/lib/store';
+import { isUserLoggedIn, redirectToLogin } from '@/lib/auth/require-login';
 import { QuickAddModal, QuickAddProductData } from '@/components/shop/QuickAddModal';
 
 interface BridalClientPageProps {
@@ -81,6 +82,16 @@ export const BridalClientPage: React.FC<BridalClientPageProps> = ({ initialProdu
       return;
     }
 
+    if (!isUserLoggedIn()) {
+      redirectToLogin(
+        { type: 'cart', productId: product.id, variantId: targetVariant.id, qty: 1 },
+        `/${product.category_slug}/${product.slug}`,
+        toast,
+        'Please log in to add items to your cart.'
+      );
+      return;
+    }
+
     setAddingId(product.id);
     try {
       const res = await fetch('/api/cart/items', {
@@ -130,6 +141,17 @@ export const BridalClientPage: React.FC<BridalClientPageProps> = ({ initialProdu
   };
 
   const handleOpenQuickAdd = (product: CatalogProduct) => {
+    if (!isUserLoggedIn()) {
+      const targetVariant = product.variants.find((v) => v.stock > 0) || product.variants[0];
+      redirectToLogin(
+        { type: 'cart', productId: product.id, variantId: targetVariant?.id, qty: 1 },
+        `/${product.category_slug}/${product.slug}`,
+        toast,
+        'Please log in to add items to your cart.'
+      );
+      return;
+    }
+
     const quickAddData: QuickAddProductData = {
       id: product.id,
       name: product.name,

@@ -51,6 +51,49 @@ export default function CheckoutPage() {
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState<string | null>(null);
 
+  // Shadowfax Pincode Serviceability
+  const [serviceability, setServiceability] = useState<{
+    pincode: string;
+    serviceable: boolean;
+    prepaid: boolean;
+    cod: boolean;
+    estimatedDays: string | null;
+    message: string;
+  } | null>(null);
+  const [checkingServiceability, setCheckingServiceability] = useState(false);
+
+  const activePincode = showNewAddressForm
+    ? addrPincode
+    : addresses.find((a) => a.id === selectedAddressId)?.pincode || '';
+
+  useEffect(() => {
+    const cleanPin = String(activePincode || '').trim();
+    if (!/^[1-9][0-9]{5}$/.test(cleanPin)) {
+      setServiceability(null);
+      return;
+    }
+
+    let cancelled = false;
+    setCheckingServiceability(true);
+    fetch(`/api/shipping/shadowfax/serviceability?pincode=${encodeURIComponent(cleanPin)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled && data && typeof data.serviceable === 'boolean') {
+          setServiceability(data);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setServiceability(null);
+      })
+      .finally(() => {
+        if (!cancelled) setCheckingServiceability(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activePincode]);
+
   useEffect(() => {
     const init = async () => {
       try {
@@ -509,6 +552,45 @@ export default function CheckoutPage() {
                 )}
               </div>
             </form>
+          )}
+
+          {/* Shadowfax Serviceability Check Banner */}
+          {(checkingServiceability || serviceability) && (
+            <div
+              className={`p-3.5 rounded-[2px] border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${
+                checkingServiceability
+                  ? 'bg-[var(--bg)] border-[var(--line)] text-[var(--ink-muted)]'
+                  : serviceability?.serviceable
+                  ? 'bg-emerald-50/60 border-emerald-200 text-emerald-900'
+                  : 'bg-rose-50/70 border-rose-200 text-rose-900'
+              }`}
+            >
+              {checkingServiceability ? (
+                <span>Checking Shadowfax delivery serviceability for pincode {activePincode}...</span>
+              ) : serviceability ? (
+                <>
+                  <div>
+                    <span className="font-semibold block">{serviceability.message}</span>
+                    <span className="text-[11px] opacity-80">
+                      Pincode: {serviceability.pincode}
+                      {serviceability.estimatedDays ? ` • Est. Delivery: ${serviceability.estimatedDays} business days` : ''}
+                    </span>
+                  </div>
+                  {serviceability.serviceable && (
+                    <div className="flex items-center gap-2 shrink-0 text-[11px] font-semibold">
+                      {serviceability.prepaid && (
+                        <span className="px-2 py-0.5 rounded bg-white border border-emerald-200 text-emerald-800">
+                          Prepaid Supported
+                        </span>
+                      )}
+                      <span className="px-2 py-0.5 rounded bg-white border border-emerald-200 text-emerald-800">
+                        {serviceability.cod ? 'COD Available' : 'Prepaid Only'}
+                      </span>
+                    </div>
+                  )}
+                </>
+              ) : null}
+            </div>
           )}
         </section>
 

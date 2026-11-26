@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export interface SiteBanner {
@@ -55,7 +56,7 @@ export async function getActiveBanner(): Promise<SiteBanner | null> {
 
 export async function createBanner(data: Partial<SiteBanner>): Promise<SiteBanner> {
   const newBanner: SiteBanner = {
-    id: `bnr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+    id: crypto.randomUUID(),
     text: data.text || 'Promotional Announcement',
     highlight_text: data.highlight_text || null,
     link_url: data.link_url || null,
@@ -84,20 +85,29 @@ export async function createBanner(data: Partial<SiteBanner>): Promise<SiteBanne
 
 export async function updateBanner(id: string, data: Partial<SiteBanner>): Promise<SiteBanner | null> {
   const idx = inMemoryBanners.findIndex((b) => b.id === id);
-  if (idx === -1) return null;
-
-  inMemoryBanners[idx] = { ...inMemoryBanners[idx], ...data };
+  if (idx !== -1) {
+    inMemoryBanners[idx] = { ...inMemoryBanners[idx], ...data };
+  }
 
   try {
     if (process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.NEXT_PUBLIC_SUPABASE_URL) {
       const supabase = createAdminClient() as any;
-      await supabase.from('site_banners').update(data).eq('id', id);
+      const { data: updatedRow, error } = await supabase
+        .from('site_banners')
+        .update({ ...data, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .maybeSingle();
+
+      if (!error && updatedRow) {
+        return updatedRow as SiteBanner;
+      }
     }
-  } catch {
-    // fallback
+  } catch (err) {
+    console.warn('Supabase site_banners update warning:', err);
   }
 
-  return inMemoryBanners[idx];
+  return idx !== -1 ? inMemoryBanners[idx] : null;
 }
 
 export async function deleteBanner(id: string): Promise<boolean> {

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import clsx from 'clsx';
 import { ShoppingBag, Heart, Star, Check, ArrowRight } from 'lucide-react';
 import { clientStore } from '@/lib/store';
+import { isUserLoggedIn, redirectToLogin } from '@/lib/auth/require-login';
 import { useToast } from '@/components/ui/Toast';
 import { QuickAddModal, QuickAddProductData, QuickAddVariant } from '@/components/shop/QuickAddModal';
 
@@ -540,6 +541,20 @@ export const FeaturedProductsSection: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleOpenQuickAdd = (product: FeaturedProductItem) => {
+    if (!isUserLoggedIn()) {
+      redirectToLogin(
+        {
+          type: 'cart',
+          variantId: product.variantId,
+          qty: 1,
+        },
+        `/${product.categorySlug}/${product.slug}`,
+        toast,
+        'Please log in to add items to your cart.'
+      );
+      return;
+    }
+
     const quickAddData: QuickAddProductData = {
       id: product.id,
       name: product.name,
@@ -562,6 +577,20 @@ export const FeaturedProductsSection: React.FC = () => {
   };
 
   const handleAddToCart = async (product: FeaturedProductItem) => {
+    if (!isUserLoggedIn()) {
+      redirectToLogin(
+        {
+          type: 'cart',
+          variantId: product.variantId,
+          qty: 1,
+        },
+        `/${product.categorySlug}/${product.slug}`,
+        toast,
+        'Please log in to add items to your cart.'
+      );
+      return;
+    }
+
     setAddingId(product.id);
     try {
       const res = await fetch('/api/cart/items', {
@@ -579,23 +608,24 @@ export const FeaturedProductsSection: React.FC = () => {
           (acc: number, item: { qty: number }) => acc + item.qty,
           0
         );
-        clientStore.setCartCount(totalQty || clientStore.cartCount + 1);
+        clientStore.setCartCount(data.totalItems ?? (totalQty || clientStore.cartCount + 1));
         toast(`Added "${product.name}" to your bag`, 'success');
         setAddedIds((prev) => ({ ...prev, [product.id]: true }));
         setTimeout(() => {
           setAddedIds((prev) => ({ ...prev, [product.id]: false }));
         }, 1500);
       } else if (res.status === 401) {
-        sessionStorage.setItem(
-          'bz_pending_action',
-          JSON.stringify({
+        clientStore.setAuth(false);
+        redirectToLogin(
+          {
             type: 'cart',
             variantId: product.variantId,
             qty: 1,
-          })
+          },
+          `/${product.categorySlug}/${product.slug}`,
+          toast,
+          'Please log in to add items to your cart.'
         );
-        toast('Please log in to add items to your cart.', 'info');
-        window.location.href = `/login?next=/${product.categorySlug}/${product.slug}`;
       } else {
         const err = await res.json().catch(() => null);
         toast(err?.error?.message || 'Could not add to cart', 'error');
@@ -607,18 +637,56 @@ export const FeaturedProductsSection: React.FC = () => {
     }
   };
 
-  const toggleWishlist = (e: React.MouseEvent, product: FeaturedProductItem) => {
+  const toggleWishlist = async (e: React.MouseEvent, product: FeaturedProductItem) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (!isUserLoggedIn()) {
+      redirectToLogin(
+        { type: 'wishlist', productId: product.id },
+        `/${product.categorySlug}/${product.slug}`,
+        toast,
+        'Please log in to save items to your wishlist.'
+      );
+      return;
+    }
+
     const isNowWishlisted = !wishlistedIds[product.id];
-    setWishlistedIds((prev) => ({ ...prev, [product.id]: isNowWishlisted }));
-    clientStore.setWishlistCount(clientStore.wishlistCount + (isNowWishlisted ? 1 : -1));
-    toast(
-      isNowWishlisted
-        ? `Added "${product.name}" to wishlist`
-        : `Removed "${product.name}" from wishlist`,
-      'info'
-    );
+    try {
+      const res = isNowWishlisted
+        ? await fetch('/api/wishlist', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ productId: product.id }),
+          })
+        : await fetch(`/api/wishlist?productId=${product.id}`, { method: 'DELETE' });
+
+      if (res.status === 401) {
+        clientStore.setAuth(false);
+        redirectToLogin(
+          { type: 'wishlist', productId: product.id },
+          `/${product.categorySlug}/${product.slug}`,
+          toast,
+          'Please log in to save items to your wishlist.'
+        );
+        return;
+      }
+
+      if (res.ok) {
+        setWishlistedIds((prev) => ({ ...prev, [product.id]: isNowWishlisted }));
+        clientStore.setWishlistCount(Math.max(0, clientStore.wishlistCount + (isNowWishlisted ? 1 : -1)));
+        toast(
+          isNowWishlisted
+            ? `Added "${product.name}" to wishlist`
+            : `Removed "${product.name}" from wishlist`,
+          isNowWishlisted ? 'success' : 'info'
+        );
+      } else {
+        toast('Unable to update wishlist', 'error');
+      }
+    } catch {
+      toast('Unable to update wishlist', 'error');
+    }
   };
 
   return (

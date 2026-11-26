@@ -85,7 +85,19 @@ export default function AdminOrdersPage() {
       const res = await fetch(`/api/admin/orders?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
-        setOrders(data.orders || []);
+        const fetchedOrders: Order[] = data.orders || [];
+        setOrders(fetchedOrders);
+
+        // Auto-open modal if navigated via Inspect -> /admin/orders?orderId=...
+        if (typeof window !== 'undefined') {
+          const targetId = new URLSearchParams(window.location.search).get('orderId');
+          if (targetId) {
+            const match = fetchedOrders.find((o) => o.id === targetId || o.order_number === targetId);
+            if (match) {
+              setSelectedOrder(match);
+            }
+          }
+        }
       }
     } catch (err) {
       console.error('Failed to fetch orders:', err);
